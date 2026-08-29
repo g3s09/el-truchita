@@ -68,3 +68,88 @@ body { background-color: #0d0c0a; background-image: repeating-linear-gradient(0d
 
 @media (max-width: 720px) { .order-modal h2 { font-size: clamp(36px,10.5vw,50px); line-height: .94; max-width: 100%; }.cart-actions { align-items: stretch; gap: 9px; }.secondary-action, .empty-button { width: 100%; }.site-arrival img { height: 156px; width: 156px; }.site-arrival p { font-size: 8px; letter-spacing: .18em; }.install-card { padding: 28px 24px 25px; }.install-card h2 { font-size: 48px; }.install-nudge { bottom: 13px; left: 13px; } }
 @media (prefers-reduced-motion: reduce) { .site-arrival { display: none; }.menu-panel-rail { scroll-behavior: auto; } }
+
+/* Ajustes del catálogo: lectura, carbón y controles táctiles. */
+.site-header nav a, .site-header .header-order { letter-spacing: .17em; }
+.site-header .mini-logo strong { letter-spacing: .01em; }
+.elote-extra-note { color: #e4b447 !important; font-size: 11px !important; line-height: 1.45 !important; margin: 13px 0 0 !important; max-width: 390px !important; text-align: left !important; }
+.elote-extra-note b { color: var(--bone); }
+.carbon-only-note { border-left: 3px solid var(--ember); color: #5d554a; font-size: 12px; font-weight: 700; line-height: 1.42; margin: -5px 0 20px; padding: 8px 0 8px 11px; }
+.extra-help { color: #6a6155; font-size: 11px; font-weight: 700; line-height: 1.35; margin: 8px 0 0; }
+.switch-row.disabled { opacity: .57; }
+.switch-row.disabled input { cursor: not-allowed; }
+.bag-filling-customizer { border-bottom: 1px solid #b5ac9d; margin: 0; min-width: 0; padding: 20px 0 18px; }
+.bag-filling-customizer legend { font-size: 10px; font-weight: 900; letter-spacing: .12em; padding: 0; }
+.bag-filling-customizer > div { display: grid; gap: 7px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 13px; }
+.bag-filling-customizer label { align-items: center; border: 1px solid #9c9282; display: grid; gap: 2px 7px; grid-template-columns: auto minmax(0, 1fr); min-width: 0; padding: 9px; }
+.bag-filling-customizer label.selected { background: #211e19; border-color: #211e19; color: var(--bone); }
+.bag-filling-customizer input { appearance: none; height: 0; margin: 0; width: 0; }
+.bag-filling-customizer span { color: var(--fire); font-size: 8px; font-weight: 900; letter-spacing: .1em; }
+.bag-filling-customizer b { font-size: 10px; letter-spacing: .045em; line-height: 1.18; min-width: 0; overflow-wrap: anywhere; }
+.bag-filling-customizer label.selected span { color: var(--maize); }
+.mexican-section { border-top: 1px solid var(--maize); padding-top: 29px; }
+.mexican-section > header { align-items: baseline; display: flex; justify-content: space-between; margin-bottom: 27px; }
+.mexican-section > header p { color: #c9c0ae; font-size: 10px; font-weight: 900; letter-spacing: .13em; line-height: 1.4; margin: 0; max-width: 43%; }
+.mexican-section > header h2 { color: var(--maize); font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; font-size: clamp(38px, 5.7vw, 82px); letter-spacing: -.012em; line-height: .86; margin: 0; text-align: right; }
+.mexican-intro { background: linear-gradient(105deg, #1b1a15, #272117); border: 1px solid rgba(245,181,27,.48); display: grid; grid-template-columns: minmax(0, 1fr) minmax(200px, .86fr); gap: 22px; padding: 20px; }
+.mexican-intro > div:first-child { align-self: center; display: grid; gap: 9px; }
+.mexican-intro p { color: var(--ember); font-size: 10px; font-weight: 900; letter-spacing: .16em; margin: 0; }
+.mexican-intro strong { color: var(--bone); font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; font-size: clamp(25px, 3vw, 42px); letter-spacing: .01em; line-height: .93; }
+.mexican-intro span { color: #d1c8b7; font-size: 12px; font-weight: 700; line-height: 1.42; max-width: 440px; }
+.mexican-reference-images { display: grid; grid-template-columns: 1fr 1fr; min-height: 165px; overflow: hidden; }
+.mexican-reference-images img { filter: contrast(1.09) saturate(.84); height: 100%; object-fit: cover; width: 100%; }
+.mexican-reference-images img:first-child { object-position: center; }
+.mexican-reference-images img:last-child { object-position: center; }
+.mexican-family-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }
+.mexican-family-grid article { border: 1px solid rgba(187,174,146,.47); min-width: 0; padding: 15px; }
+.mexican-family-grid article > p { color: var(--maize); font-size: 10px; font-weight: 900; letter-spacing: .14em; margin: 0 0 6px; }
+.mexican-family-grid article > span { color: #c9c1b3; display: block; font-size: 11px; font-weight: 700; line-height: 1.35; margin-bottom: 13px; }
+.mexican-family-grid article > div { display: grid; gap: 6px; }
+.mexican-family-grid button { align-items: center; background: rgba(241,235,220,.06); border: 1px solid rgba(241,235,220,.15); color: var(--bone); display: grid; gap: 3px 9px; grid-template-columns: minmax(0, 1fr) auto; min-width: 0; padding: 8px 10px; text-align: left; transition: background .2s, border-color .2s, transform .2s; }
+.mexican-family-grid button:hover { background: rgba(245,181,27,.12); border-color: var(--maize); transform: translateX(2px); }
+.mexican-family-grid button b { font-size: 10px; letter-spacing: .08em; line-height: 1.15; overflow-wrap: anywhere; }
+.mexican-family-grid button small { color: var(--maize); font-size: 10px; font-weight: 900; grid-column: 2; grid-row: 1 / span 2; }
+.mexican-family-grid button i { color: var(--ember); font-size: 16px; font-style: normal; grid-column: 1; grid-row: 2; }
+
+/* Transición arcade: cuatro segundos de maíz cayendo antes de abrir el menú. */
+.arcade-menu-transition { align-items: center; background: radial-gradient(circle at 50% 69%, #4f190c 0, #1c1110 31%, #070808 74%); display: flex; inset: 0; justify-content: center; overflow: hidden; position: fixed; z-index: 160; }
+.arcade-menu-transition::before { border: 2px solid rgba(245,181,27,.75); box-shadow: 0 0 0 8px rgba(240,75,29,.14), inset 0 0 68px rgba(240,75,29,.28); content: ''; inset: clamp(18px, 4vw, 55px); pointer-events: none; position: absolute; }
+.arcade-scanlines { background: repeating-linear-gradient(0deg, rgba(255,255,255,.055) 0 1px, transparent 1px 4px); inset: 0; mix-blend-mode: soft-light; opacity: .46; pointer-events: none; position: absolute; }
+.arcade-corn-field { inset: 0; overflow: hidden; pointer-events: none; position: absolute; }
+.arcade-corn-field i { animation: arcade-corn-fall 2.25s linear calc((var(--kernel-index) * -0.19s)) infinite; color: var(--maize); font-family: monospace; font-size: clamp(14px, 2.2vw, 28px); font-style: normal; left: calc((var(--kernel-index) * 13%) - 4%); opacity: .9; position: absolute; text-shadow: 2px 2px 0 var(--fire), 0 0 13px rgba(245,181,27,.8); top: -12%; }
+.arcade-transition-copy { align-items: center; display: flex; flex-direction: column; gap: 13px; position: relative; text-align: center; z-index: 2; }
+.arcade-transition-copy p, .arcade-transition-copy span { color: var(--bone); font-family: monospace; font-size: clamp(9px, 1.4vw, 13px); font-weight: 900; letter-spacing: .18em; margin: 0; }
+.arcade-transition-copy strong { color: var(--maize); font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; font-size: clamp(65px, 14vw, 160px); letter-spacing: .045em; line-height: .72; text-shadow: 4px 5px 0 var(--fire), 8px 10px 0 rgba(0,0,0,.6); }
+.arcade-transition-copy em { color: var(--bone); font-style: normal; }
+.arcade-transition-copy b { animation: arcade-loading 1.1s steps(8) infinite; color: var(--ember); font-size: 18px; letter-spacing: .24em; }
+@keyframes arcade-corn-fall { 0% { opacity: 0; transform: translateY(-14vh) rotate(0); } 12% { opacity: 1; } 78% { opacity: 1; } 100% { opacity: 0; transform: translateY(118vh) rotate(300deg); } }
+@keyframes arcade-loading { 50% { opacity: .18; transform: scaleX(.45); } }
+
+@media (min-width: 721px) {
+  .menu-page .product-copy h3 { letter-spacing: .035em; line-height: 1.02; }
+  .menu-page .product-card > button { letter-spacing: .17em; }
+  .site-header nav a, .site-header .header-order { font-size: 10px; }
+}
+@media (max-width: 720px) {
+  .elote-extra-note { font-size: 10px !important; margin-top: 9px !important; }
+  .order-modal.customize { max-width: min(100%, 600px); overflow-x: hidden; padding-left: 18px; padding-right: 18px; }
+  .bag-customizer, .bag-filling-customizer, .custom-options { max-width: 100%; min-width: 0; }
+  .bag-customizer-options { margin-right: -3px; max-width: 100%; padding-right: 3px; }
+  .bag-customizer-options label { flex-basis: 114px; }
+  .bag-filling-customizer > div { grid-template-columns: 1fr; }
+  .bag-filling-customizer label { min-width: 0; }
+  .extra-option { grid-template-columns: 39px minmax(0,1fr) auto; gap: 8px; }
+  .extra-option .ingredient-reference { height: 39px; width: 39px; }
+  .extra-option b { letter-spacing: .06em; }
+  .mexican-section > header { align-items: flex-start; flex-direction: column-reverse; gap: 10px; }
+  .mexican-section > header p { max-width: 100%; }
+  .mexican-section > header h2 { font-size: 50px; text-align: left; }
+  .mexican-intro { display: block; padding: 15px; }
+  .mexican-reference-images { margin-top: 16px; min-height: 132px; }
+  .mexican-family-grid { grid-template-columns: 1fr; }
+  .arcade-transition-copy strong { font-size: 77px; }
+  .arcade-menu-transition::before { inset: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arcade-menu-transition * { animation-duration: .01ms !important; }
+}

@@ -1,5 +1,5 @@
 import { head, put } from '@vercel/blob';
-import { defaultMenu, isMenuData, MenuData } from './menu';
+import { defaultMenu, isMenuData, MenuData, normalizeMenu } from './menu';
 
 const menuPath = 'el-truchita/menu.json';
 
@@ -14,7 +14,7 @@ export async function readMenu(): Promise<MenuData> {
     const blob = await head(menuPath);
     const response = await fetch(blob.url, { cache: 'no-store' });
     const menu: unknown = await response.json();
-    return isMenuData(menu) ? menu : defaultMenu;
+    return isMenuData(menu) ? normalizeMenu(menu) : defaultMenu;
   } catch {
     return defaultMenu;
   }
