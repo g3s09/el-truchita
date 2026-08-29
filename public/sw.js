@@ -1,4 +1,4 @@
-const CACHE_NAME = 'el-truchita-v1';
+const CACHE_NAME = 'el-truchita-v2';
 const CORE_ASSETS = ['/', '/menu', '/manifest.webmanifest', '/app-icon-192.png', '/app-icon-512.png', '/hero-corn.png', '/esquite-callejero.png', '/botanas-en-bolsa.png'];
 
 self.addEventListener('install', (event) => {

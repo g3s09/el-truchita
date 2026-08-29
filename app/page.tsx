@@ -11,7 +11,7 @@ export default function Home() {
     event.preventDefault();
     if (openingMenu) return;
     setOpeningMenu(true);
-    window.setTimeout(() => window.location.assign('/menu'), 4000);
+    window.setTimeout(() => window.location.assign('/menu'), 2400);
   };
 
   return <main className="landing-page">

@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { defaultMenu, ExtraOption, isMenuData, MenuData, MenuSection as MenuSectionType, Product } from '@/lib/menu';
 
-type SnackFlavor = { id: string; name: string; note: string; color: string };
+type SnackFlavor = { id: string; name: string; note: string; color: string; price: number };
 type Preparation = 'standard' | 'muy-mexicano';
 type CustomizeOptions = { snackFlavor?: SnackFlavor; bagFilling?: Product; preparation?: Preparation };
 type CartItem = { id: string; product: Product; mayo: boolean; queso: boolean; extras: ExtraOption[]; note: string; snackFlavor?: SnackFlavor; bagFilling?: Product; preparation: Preparation };
@@ -13,11 +13,11 @@ type Modal = 'none' | 'customize' | 'cart' | 'checkout' | 'sending';
 const WHATSAPP_BUSINESS_NUMBER = '522204419169';
 const money = (amount: number) => '$' + amount;
 const snackFlavors: SnackFlavor[] = [
-  { id: 'doritos-nacho', name: 'DORITOS NACHO', note: 'Crujiente y quesito.', color: 'maize' },
-  { id: 'doritos-fuego', name: 'DORITOS FUEGO', note: 'Con un toque más bravo.', color: 'ember' },
-  { id: 'cheetos-flamin', name: 'CHEETOS FLAMIN’ HOT', note: 'Para quien quiere picante.', color: 'flamin' },
-  { id: 'takis', name: 'TAKIS', note: 'Chile y limón al frente.', color: 'lime' },
-  { id: 'tostitos', name: 'TOSTITOS', note: 'El clásico para llenar bien.', color: 'toast' },
+  { id: 'doritos-nacho', name: 'DORITOS NACHO', note: 'Crujiente y quesito.', color: 'maize', price: 30 },
+  { id: 'doritos-fuego', name: 'DORITOS FUEGO', note: 'Con un toque más bravo.', color: 'ember', price: 30 },
+  { id: 'cheetos-flamin', name: 'CHEETOS FLAMIN’ HOT', note: 'Para quien quiere picante.', color: 'flamin', price: 30 },
+  { id: 'takis', name: 'TAKIS', note: 'Chile y limón al frente.', color: 'lime', price: 35 },
+  { id: 'tostitos', name: 'TOSTITOS', note: 'El clásico para llenar bien.', color: 'toast', price: 35 },
 ];
 
 const panelDetails: Array<{ key: MenuSectionType; nav: string; eyebrow: string; title: string; accent?: boolean }> = [
@@ -38,8 +38,13 @@ function serviceLabel(product: Product) {
   return 'PERSONALIZA TU VASO';
 }
 
+function selectionBasePrice(product: Product, snackFlavor?: SnackFlavor, bagFilling?: Product) {
+  if (product.service === 'bag') return (snackFlavor?.price ?? 0) + (bagFilling?.price ?? 0);
+  return product.price;
+}
+
 function cartItemTotal(item: CartItem) {
-  return item.product.price + item.extras.reduce((sum, extra) => sum + extra.price, 0);
+  return selectionBasePrice(item.product, item.snackFlavor, item.bagFilling) + item.extras.reduce((sum, extra) => sum + extra.price, 0);
 }
 
 export default function MenuExperience() {
@@ -74,14 +79,14 @@ export default function MenuExperience() {
     return true;
   }), [activeProduct, menu.extras]);
   const selectedExtras = useMemo(() => availableExtras.filter((option) => selectedExtraIds.includes(option.id)), [availableExtras, selectedExtraIds]);
-  const activePrice = useMemo(() => (activeProduct?.price ?? 0) + selectedExtras.reduce((sum, option) => sum + option.price, 0), [activeProduct, selectedExtras]);
+  const activeBasePrice = useMemo(() => activeProduct ? selectionBasePrice(activeProduct, snackFlavor, bagFilling) : 0, [activeProduct, bagFilling, snackFlavor]);
+  const activePrice = useMemo(() => activeBasePrice + selectedExtras.reduce((sum, option) => sum + option.price, 0), [activeBasePrice, selectedExtras]);
   const total = useMemo(() => cart.reduce((sum, item) => sum + cartItemTotal(item), 0), [cart]);
 
   const openCustomizer = (product: Product, options: CustomizeOptions = {}) => {
-    const isMexican = options.preparation === 'muy-mexicano';
     setActiveProduct(product);
-    setMayo(!isMexican);
-    setQueso(!isMexican);
+    setMayo(true);
+    setQueso(true);
     setSelectedExtraIds([]);
     setSnackFlavor(options.snackFlavor ?? snackFlavors[0]);
     setBagFilling(options.bagFilling ?? bagFillings[0]);
@@ -182,7 +187,7 @@ export default function MenuExperience() {
 
     {modal !== 'none' && <div className="modal-backdrop" onMouseDown={() => modal !== 'sending' && setModal('none')}><section className={'order-modal ' + modal} role="dialog" aria-modal="true" aria-label="Mi pedido" onMouseDown={(event) => event.stopPropagation()}>
       {modal !== 'sending' && <button className="close-modal" type="button" onClick={() => setModal('none')} aria-label="Cerrar">×</button>}
-      {modal === 'customize' && activeProduct && <Customizer activeProduct={activeProduct} activePrice={activePrice} preparation={preparation} mayo={mayo} queso={queso} setMayo={setMayo} setQueso={setQueso} snackFlavor={snackFlavor} setSnackFlavor={setSnackFlavor} bagFilling={bagFilling} setBagFilling={setBagFilling} bagFillings={bagFillings} availableExtras={availableExtras} selectedExtraIds={selectedExtraIds} toggleExtra={toggleExtra} note={note} setNote={setNote} onAdd={addToCart} />}
+      {modal === 'customize' && activeProduct && <Customizer activeProduct={activeProduct} activeBasePrice={activeBasePrice} activePrice={activePrice} preparation={preparation} mayo={mayo} queso={queso} setMayo={setMayo} setQueso={setQueso} snackFlavor={snackFlavor} setSnackFlavor={setSnackFlavor} bagFilling={bagFilling} setBagFilling={setBagFilling} bagFillings={bagFillings} availableExtras={availableExtras} selectedExtraIds={selectedExtraIds} toggleExtra={toggleExtra} note={note} setNote={setNote} onAdd={addToCart} />}
       {modal === 'cart' && <CartView cart={cart} total={total} onRemove={(id) => setCart((items) => items.filter((item) => item.id !== id))} onEmpty={() => setCart([])} onContinue={closeCartToMenu} onCheckout={() => setModal('checkout')} />}
       {modal === 'checkout' && <CheckoutForm customer={customer} setCustomer={setCustomer} onSubmit={handleCheckout} onBack={() => setModal('cart')} />}
       {modal === 'sending' && <div className="sending-state"><div className="corn-flight" aria-hidden="true"><span>◐</span><i>✦</i><i>✦</i><i>✦</i></div><p className="modal-kicker">PREPARANDO TU MENSAJE</p><h2>¡VA VOLANDO<br />A WHATSAPP!</h2><p>Un momento, ya llevamos tu pedido.</p></div>}
@@ -190,12 +195,12 @@ export default function MenuExperience() {
   </main>;
 }
 
-function Customizer({ activeProduct, activePrice, preparation, mayo, queso, setMayo, setQueso, snackFlavor, setSnackFlavor, bagFilling, setBagFilling, bagFillings, availableExtras, selectedExtraIds, toggleExtra, note, setNote, onAdd }: { activeProduct: Product; activePrice: number; preparation: Preparation; mayo: boolean; queso: boolean; setMayo: (value: boolean) => void; setQueso: (value: boolean) => void; snackFlavor: SnackFlavor; setSnackFlavor: (value: SnackFlavor) => void; bagFilling?: Product; setBagFilling: (value: Product) => void; bagFillings: Product[]; availableExtras: ExtraOption[]; selectedExtraIds: string[]; toggleExtra: (id: string) => void; note: string; setNote: (value: string) => void; onAdd: () => void }) {
+function Customizer({ activeProduct, activeBasePrice, activePrice, preparation, mayo, queso, setMayo, setQueso, snackFlavor, setSnackFlavor, bagFilling, setBagFilling, bagFillings, availableExtras, selectedExtraIds, toggleExtra, note, setNote, onAdd }: { activeProduct: Product; activeBasePrice: number; activePrice: number; preparation: Preparation; mayo: boolean; queso: boolean; setMayo: (value: boolean) => void; setQueso: (value: boolean) => void; snackFlavor: SnackFlavor; setSnackFlavor: (value: SnackFlavor) => void; bagFilling?: Product; setBagFilling: (value: Product) => void; bagFillings: Product[]; availableExtras: ExtraOption[]; selectedExtraIds: string[]; toggleExtra: (id: string) => void; note: string; setNote: (value: string) => void; onAdd: () => void }) {
   const carbonOnly = preparation === 'muy-mexicano';
-  return <><p className="modal-kicker">{carbonOnly ? '100% AL CARBÓN · MUY MEXICANO' : serviceLabel(activeProduct)}</p><h2>{activeProduct.name}</h2><p className="modal-price">{money(activeProduct.price)} <small>base</small></p>{carbonOnly && <p className="carbon-only-note">Esta versión sale de las brasas sin mantequilla, epazote ni especias añadidas.</p>}<div className="custom-options">
-    {activeProduct.service === 'bag' && <><fieldset className="bag-customizer"><legend>¿QUIERES CAMBIAR LA BOTANA?</legend><div className="bag-customizer-options">{snackFlavors.map((flavor) => <label className={snackFlavor.id === flavor.id ? 'selected' : ''} key={flavor.id}><input type="radio" name="snack" checked={snackFlavor.id === flavor.id} onChange={() => setSnackFlavor(flavor)} /><span className={'snack-swatch snack-' + flavor.color} /><b>{flavor.name}</b></label>)}</div></fieldset><fieldset className="bag-filling-customizer"><legend>¿QUÉ ESQUITE QUIERES DENTRO?</legend><div>{bagFillings.map((filling) => <label className={bagFilling?.id === filling.id ? 'selected' : ''} key={filling.id}><input type="radio" name="bag-filling" checked={bagFilling?.id === filling.id} onChange={() => setBagFilling(filling)} /><span>{filling.section === 'traditional' ? 'CLÁSICO' : 'ESPECIAL'}</span><b>{filling.name}</b></label>)}</div></fieldset></>}
-    <ToggleRow kind="mayo" title="MAYONESA" description={carbonOnly ? 'Esta versión se disfruta solo al carbón.' : 'Como te gusta, o sin ella.'} checked={mayo} disabled={carbonOnly} onChange={setMayo} />
-    <ToggleRow kind="queso" title="QUESO" description={carbonOnly ? 'Esta versión se disfruta solo al carbón.' : 'Queso para cerrar bien la preparación.'} checked={queso} disabled={carbonOnly} onChange={setQueso} />
+  return <><p className="modal-kicker">{carbonOnly ? '100% AL CARBÓN · MUY MEXICANO' : serviceLabel(activeProduct)}</p><h2>{activeProduct.name}</h2><p className="modal-price">{money(activeBasePrice)} <small>{activeProduct.service === 'bag' ? 'tu selección' : 'base'}</small></p>{activeProduct.service === 'bag' && <p className="bag-total-note">Incluye la botana elegida; sus precios no se muestran por separado.</p>}{carbonOnly && <p className="carbon-only-note">Esta versión sale de las brasas sin mantequilla, epazote ni especias añadidas.</p>}<div className="custom-options">
+    {activeProduct.service === 'bag' && <><fieldset className="bag-customizer"><legend>¿QUIERES CAMBIAR LA BOTANA?</legend><div className="bag-customizer-options">{snackFlavors.map((flavor) => <label className={snackFlavor.id === flavor.id ? 'selected' : ''} key={flavor.id}><input type="radio" name="snack" checked={snackFlavor.id === flavor.id} onChange={() => setSnackFlavor(flavor)} /><span className={'snack-swatch snack-' + flavor.color} /><b>{flavor.name}</b></label>)}</div></fieldset><fieldset className="bag-filling-customizer"><legend>¿QUÉ ESQUITE QUIERES DENTRO?</legend><div>{bagFillings.map((filling) => <label className={bagFilling?.id === filling.id ? 'selected' : ''} key={filling.id}><input type="radio" name="bag-filling" checked={bagFilling?.id === filling.id} onChange={() => setBagFilling(filling)} /><span>{filling.section === 'traditional' ? 'CLÁSICO' : 'ESPECIAL'}</span><b>{filling.name}</b><em>{money(filling.price)}</em></label>)}</div></fieldset></>}
+    <ToggleRow kind="mayo" title="MAYONESA" description={carbonOnly ? 'Opcional: se agrega aparte si la quieres.' : 'Como te gusta, o sin ella.'} checked={mayo} disabled={false} onChange={setMayo} />
+    <ToggleRow kind="queso" title="QUESO" description={carbonOnly ? 'Opcional: se agrega aparte si lo quieres.' : 'Queso para cerrar bien la preparación.'} checked={queso} disabled={false} onChange={setQueso} />
     <fieldset><legend>{activeProduct.service === 'corn' ? 'SI EL ELOTE NO TE BASTA, AGRÉGALE…' : 'ELIGE TODOS LOS EXTRAS QUE SE TE ANTOJEN'}</legend>{activeProduct.service === 'corn' && <p className="extra-help">Tocino, salchicha, quesos fundidos o una porción de maíz asado — $25 c/u.</p>}<div className="extra-grid">{availableExtras.map((option) => <label key={option.id} className={selectedExtraIds.includes(option.id) ? 'extra-option selected' : 'extra-option'}><input type="checkbox" checked={selectedExtraIds.includes(option.id)} onChange={() => toggleExtra(option.id)} /><IngredientReference kind={option.imagePosition} /><span><b>{option.name}</b><small>{option.description}</small></span><strong>+{money(option.price)}</strong></label>)}</div></fieldset>
     <label className="note-field"><span>NOTA PARA TU PEDIDO</span><textarea maxLength={180} placeholder="Ej. bien picoso, sin limón..." value={note} onChange={(event) => setNote(event.target.value)} /></label>
   </div><button className="wide-action" type="button" onClick={onAdd}>AGREGAR A MI PEDIDO <span>{money(activePrice)}</span></button></>;
@@ -220,7 +225,7 @@ function MenuSection({ eyebrow, title, products, onChoose, accent = false }: { e
 
 function BagSection({ product, fillings, onChoose }: { product?: Product; fillings: Product[]; onChoose: (product: Product, options?: CustomizeOptions) => void }) {
   if (!product) return <div className="bag-section-empty">Próximamente habrá una nueva bolsa para elegir.</div>;
-  return <div className="bag-section"><div className="bag-section-copy"><p className="section-kicker light">ABRIMOS LA BOTANA. EL RESTO LO ARMAS A TU GUSTO.</p><span className="bag-price">{money(product.price)}</span><h2>UN GUSTITO<br /><em>MÁS.</em></h2><p>Elige la botana y el esquite clásico o especial que quieres dentro. Tu antojo se arma en una sola bolsa.</p></div><figure className="bag-main-photo"><img src="/botanas-en-bolsa.png" alt="Bolsas de botana de distintos sabores sobre una mesa con chiles y limón" /><figcaption>UNA BOLSA · EL ESQUITE QUE TÚ ELIJAS</figcaption></figure><div className="bag-flavor-area"><p>¿QUÉ BOTANA SE TE ANTOJA?</p><div className="bag-flavor-stack">{snackFlavors.map((flavor, index) => <button type="button" className={'bag-flavor flavor-' + flavor.color} style={{ '--flavor-index': index } as CSSProperties} key={flavor.id} onClick={() => onChoose(product, { snackFlavor: flavor, bagFilling: fillings[0] })}><span>0{index + 1}</span><b>{flavor.name}</b><small>{flavor.note}</small><i>+</i></button>)}</div><small className="bag-hint">ELIGE TU BOTANA Y DESPUÉS DECIDE QUÉ ESQUITE VA DENTRO</small></div></div>;
+  return <div className="bag-section"><div className="bag-section-copy"><p className="section-kicker light">ABRIMOS LA BOTANA. EL RESTO LO ARMAS A TU GUSTO.</p><span className="bag-price">BOTANA + ESQUITE A TU ELECCIÓN</span><h2>UN GUSTITO<br /><em>MÁS.</em></h2><p>Elige la botana y el esquite clásico o especial que quieres dentro. Verás el total de tu combinación antes de agregar extras.</p></div><figure className="bag-main-photo"><img src="/botanas-en-bolsa.png" alt="Bolsas de botana de distintos sabores sobre una mesa con chiles y limón" /><figcaption>UNA BOLSA · EL ESQUITE QUE TÚ ELIJAS</figcaption></figure><div className="bag-flavor-area"><p>¿QUÉ BOTANA SE TE ANTOJA?</p><div className="bag-flavor-stack">{snackFlavors.map((flavor, index) => <button type="button" className={'bag-flavor flavor-' + flavor.color} style={{ '--flavor-index': index } as CSSProperties} key={flavor.id} onClick={() => onChoose(product, { snackFlavor: flavor, bagFilling: fillings[0] })}><span>0{index + 1}</span><b>{flavor.name}</b><small>{flavor.note}</small><i>+</i></button>)}</div><small className="bag-hint">ELIGE TU BOTANA Y DESPUÉS DECIDE QUÉ ESQUITE VA DENTRO</small></div></div>;
 }
 
 function MuyMexicanoSection({ productsBySection, bagFillings, onChoose }: { productsBySection: Record<MenuSectionType, Product[]>; bagFillings: Product[]; onChoose: (product: Product, options?: CustomizeOptions) => void }) {
@@ -230,5 +235,5 @@ function MuyMexicanoSection({ productsBySection, bagFillings, onChoose }: { prod
     { name: 'ELOTES', detail: 'Enteros, asados y sin rodeos.', products: productsBySection.elotes },
     { name: 'UN GUSTITO MÁS', detail: 'Tu botana y tu esquite preferido, a las brasas.', products: productsBySection.bolsa },
   ];
-  return <div className="mexican-section"><header><p>MAÍZ, FUEGO Y TRADICIÓN, COMO DEBE SER.</p><h2>MUY MEXICANO</h2></header><div className="mexican-intro"><div><p>100% AL CARBÓN</p><strong>EL SABOR DEL MAÍZ CUANDO LO DEJAS HABLAR.</strong><span>Estas preparaciones salen del asador sin mantequilla, epazote ni especias añadidas. Solo brasa, maíz y el oficio de hacerlo bien.</span></div><div className="mexican-reference-images"><img src="/elote-brasa-real.jpeg" alt="Elote asado a las brasas" /><img src="/fogon-carbon-real.jpeg" alt="Preparación sobre brasas" /></div></div><div className="mexican-family-grid">{groups.map((group) => <article key={group.name}><p>{group.name}</p><span>{group.detail}</span><div>{group.products.map((product) => <button key={product.id} type="button" onClick={() => onChoose(product, { preparation: 'muy-mexicano', snackFlavor: snackFlavors[0], bagFilling: bagFillings[0] })}><b>{product.name}</b><small>{money(product.price)}</small><i>↗</i></button>)}</div></article>)}</div></div>;
+  return <div className="mexican-section"><header><p>MAÍZ, FUEGO Y TRADICIÓN, COMO DEBE SER.</p><h2>MUY MEXICANO</h2></header><div className="mexican-intro"><div><p>100% AL CARBÓN</p><strong>EL SABOR DEL MAÍZ CUANDO LO DEJAS HABLAR.</strong><span>Estas preparaciones salen del asador sin mantequilla, epazote ni especias añadidas. Mayonesa y queso son opcionales y se sirven aparte.</span></div><div className="mexican-reference-images"><img src="/elote-brasa-real.jpeg" alt="Elote asado a las brasas" /><img src="/fogon-carbon-real.jpeg" alt="Preparación sobre brasas" /></div></div><div className="mexican-family-grid">{groups.map((group) => <article key={group.name}><p>{group.name}</p><span>{group.detail}</span><div>{group.products.map((product) => <button key={product.id} type="button" onClick={() => onChoose(product, { preparation: 'muy-mexicano', snackFlavor: snackFlavors[0], bagFilling: bagFillings[0] })}><b>{product.name}</b><small>{product.service === 'bag' ? 'A TU ELECCIÓN' : money(product.price)}</small><i>↗</i></button>)}</div></article>)}</div></div>;
 }

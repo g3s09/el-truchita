@@ -81,12 +81,15 @@ body { background-color: #0d0c0a; background-image: repeating-linear-gradient(0d
 .bag-filling-customizer { border-bottom: 1px solid #b5ac9d; margin: 0; min-width: 0; padding: 20px 0 18px; }
 .bag-filling-customizer legend { font-size: 10px; font-weight: 900; letter-spacing: .12em; padding: 0; }
 .bag-filling-customizer > div { display: grid; gap: 7px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 13px; }
-.bag-filling-customizer label { align-items: center; border: 1px solid #9c9282; display: grid; gap: 2px 7px; grid-template-columns: auto minmax(0, 1fr); min-width: 0; padding: 9px; }
+.bag-filling-customizer label { align-items: center; border: 1px solid #9c9282; display: grid; gap: 2px 7px; grid-template-columns: auto minmax(0, 1fr) auto; min-width: 0; padding: 9px; }
 .bag-filling-customizer label.selected { background: #211e19; border-color: #211e19; color: var(--bone); }
 .bag-filling-customizer input { appearance: none; height: 0; margin: 0; width: 0; }
 .bag-filling-customizer span { color: var(--fire); font-size: 8px; font-weight: 900; letter-spacing: .1em; }
 .bag-filling-customizer b { font-size: 10px; letter-spacing: .045em; line-height: 1.18; min-width: 0; overflow-wrap: anywhere; }
+.bag-filling-customizer em { color: var(--fire); font-size: 11px; font-style: normal; font-weight: 900; grid-column: 3; grid-row: 1 / span 2; }
 .bag-filling-customizer label.selected span { color: var(--maize); }
+.bag-filling-customizer label.selected em { color: var(--maize); }
+.bag-total-note { color: #625a4f; font-size: 11px; font-weight: 700; line-height: 1.35; margin: -15px 0 20px; }
 .mexican-section { border-top: 1px solid var(--maize); padding-top: 29px; }
 .mexican-section > header { align-items: baseline; display: flex; justify-content: space-between; margin-bottom: 27px; }
 .mexican-section > header p { color: #c9c0ae; font-size: 10px; font-weight: 900; letter-spacing: .13em; line-height: 1.4; margin: 0; max-width: 43%; }
@@ -111,7 +114,7 @@ body { background-color: #0d0c0a; background-image: repeating-linear-gradient(0d
 .mexican-family-grid button small { color: var(--maize); font-size: 10px; font-weight: 900; grid-column: 2; grid-row: 1 / span 2; }
 .mexican-family-grid button i { color: var(--ember); font-size: 16px; font-style: normal; grid-column: 1; grid-row: 2; }
 
-/* Transición arcade: cuatro segundos de maíz cayendo antes de abrir el menú. */
+/* Transición arcade breve de maíz cayendo antes de abrir el menú. */
 .arcade-menu-transition { align-items: center; background: radial-gradient(circle at 50% 69%, #4f190c 0, #1c1110 31%, #070808 74%); display: flex; inset: 0; justify-content: center; overflow: hidden; position: fixed; z-index: 160; }
 .arcade-menu-transition::before { border: 2px solid rgba(245,181,27,.75); box-shadow: 0 0 0 8px rgba(240,75,29,.14), inset 0 0 68px rgba(240,75,29,.28); content: ''; inset: clamp(18px, 4vw, 55px); pointer-events: none; position: absolute; }
 .arcade-scanlines { background: repeating-linear-gradient(0deg, rgba(255,255,255,.055) 0 1px, transparent 1px 4px); inset: 0; mix-blend-mode: soft-light; opacity: .46; pointer-events: none; position: absolute; }
