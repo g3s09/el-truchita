@@ -11,6 +11,7 @@ export type Product = {
   image: string;
   hasIngredients: boolean;
   service?: ProductService;
+  available?: boolean;
 };
 
 export type ExtraOption = {
@@ -88,6 +89,7 @@ export function isMenuData(value: unknown): value is MenuData {
       && isString(item.description)
       && isString(item.image)
       && typeof item.hasIngredients === 'boolean'
+      && (item.available === undefined || typeof item.available === 'boolean')
       && (item.service === undefined || isService(item.service));
   }) && menu.extras.every((extra) => {
     if (!extra || typeof extra !== 'object') return false;
@@ -108,9 +110,9 @@ export function normalizeMenu(menu: MenuData): MenuData {
   const products = savedProducts.map((product) => {
     const catalogProduct = defaultsById.get(product.id);
     if (catalogProduct && product.image === productImage && catalogProduct.image !== productImage) {
-      return { ...product, image: catalogProduct.image };
+      return { ...product, image: catalogProduct.image, available: product.available !== false };
     }
-    return product;
+    return { ...product, available: product.available !== false };
   });
   const savedIds = new Set(products.map((product) => product.id));
   for (const product of defaultMenu.products) {

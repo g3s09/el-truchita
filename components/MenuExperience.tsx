@@ -10,8 +10,11 @@ type CustomizeOptions = { snackFlavor?: SnackFlavor; bagFilling?: Product; prepa
 type CartItem = { id: string; product: Product; mayo: boolean; queso: boolean; extras: ExtraOption[]; note: string; snackFlavor?: SnackFlavor; bagFilling?: Product; preparation: Preparation };
 type Modal = 'none' | 'customize' | 'cart' | 'checkout' | 'sending';
 type CustomerDetails = { name: string; phone: string; address: string; references: string; exactLocation: string; payment: 'exact' | 'change'; changeFor: string };
+type BusinessStatus = { open: boolean; label: string };
+type DeliveryPolicy = { title: string; detail: string; whatsapp: string };
 
 const WHATSAPP_BUSINESS_NUMBER = '522204419169';
+const CART_STORAGE_KEY = 'el-truchita-cart-v1';
 const money = (amount: number) => '$' + amount;
 const snackFlavors: SnackFlavor[] = [
   { id: 'doritos-nacho', name: 'DORITOS NACHO', note: 'Crujiente y quesito.', color: 'maize', price: 30 },
@@ -48,12 +51,35 @@ function cartItemTotal(item: CartItem) {
   return selectionBasePrice(item.product, item.snackFlavor, item.bagFilling) + item.extras.reduce((sum, extra) => sum + extra.price, 0);
 }
 
+function businessStatus(now = new Date()): BusinessStatus {
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Mexico_City', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(now);
+  const value = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? 0);
+  const day = parts.find((part) => part.type === 'weekday')?.value;
+  const minutes = value('hour') * 60 + value('minute');
+  const afterEveningOpen = minutes >= 18 * 60 + 30 && day !== 'Sat';
+  const afterMidnightOpen = minutes <= 30 && day !== 'Sun';
+  const open = afterEveningOpen || afterMidnightOpen;
+  return { open, label: open ? 'ABIERTO AHORA · TOMAMOS PEDIDOS' : 'CERRADO AHORA · DOM–VIE 6:30 P. M. — 12:30 A. M.' };
+}
+
+function deliveryPolicy(total: number): DeliveryPolicy {
+  if (total >= 400) return { title: 'ENVÍO GRATIS', detail: 'Tu pedido alcanza el envío gratis. Solo confirmaremos que la dirección esté dentro de nuestra zona de reparto.', whatsapp: 'Envío gratis por subtotal de ' + money(total) + '. Zona de entrega por confirmar.' };
+  if (total >= 250 && total <= 300) return { title: 'CUBRIMOS LA MITAD DEL ENVÍO', detail: 'Nosotros cubrimos la mitad. El monto final depende de la distancia de entrega.', whatsapp: 'El negocio cubre la mitad del envío. Monto final según distancia.' };
+  if (total < 250) return { title: 'ENVÍO POR CUENTA DEL CLIENTE', detail: 'El costo se confirma según la distancia de entrega.', whatsapp: 'Costo de envío por cuenta del cliente; monto por confirmar según distancia.' };
+  return { title: 'ENVÍO POR CONFIRMAR', detail: 'En pedidos de $301 a $399 confirmamos el costo según la distancia antes de preparar.', whatsapp: 'Costo de envío por confirmar según distancia antes de preparar.' };
+}
+
+function orderReference() {
+  return 'TRU-' + Date.now().toString(36).toUpperCase() + '-' + Math.floor(100 + Math.random() * 900);
+}
+
 export default function MenuExperience() {
   const [menu, setMenu] = useState<MenuData>(defaultMenu);
   const [modal, setModal] = useState<Modal>('none');
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
   const [activePanel, setActivePanel] = useState(0);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartLoaded, setCartLoaded] = useState(false);
   const [mayo, setMayo] = useState(true);
   const [queso, setQueso] = useState(true);
   const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
@@ -62,6 +88,8 @@ export default function MenuExperience() {
   const [bagFilling, setBagFilling] = useState<Product | undefined>();
   const [preparation, setPreparation] = useState<Preparation>('standard');
   const [customer, setCustomer] = useState<CustomerDetails>({ name: '', phone: '', address: '', references: '', exactLocation: '', payment: 'exact', changeFor: '' });
+  const [status, setStatus] = useState<BusinessStatus | null>(null);
+  const [reference, setReference] = useState('');
   const panelRail = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,7 +100,31 @@ export default function MenuExperience() {
     return () => { live = false; };
   }, []);
 
-  const productsBySection = useMemo(() => Object.fromEntries(panelDetails.map((panel) => [panel.key, menu.products.filter((product) => product.section === panel.key)])) as Record<MenuSectionType, Product[]>, [menu.products]);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) ?? '[]');
+      if (Array.isArray(saved)) setCart(saved as CartItem[]);
+    } catch {
+      localStorage.removeItem(CART_STORAGE_KEY);
+    } finally {
+      setCartLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!cartLoaded) return;
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  }, [cart, cartLoaded]);
+
+  useEffect(() => {
+    const updateStatus = () => setStatus(businessStatus());
+    updateStatus();
+    const timer = window.setInterval(updateStatus, 60000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const availableProducts = useMemo(() => menu.products.filter((product) => product.available !== false), [menu.products]);
+  const productsBySection = useMemo(() => Object.fromEntries(panelDetails.map((panel) => [panel.key, availableProducts.filter((product) => product.section === panel.key)])) as Record<MenuSectionType, Product[]>, [availableProducts]);
   const bagFillings = useMemo(() => [...productsBySection.traditional, ...productsBySection.specialty], [productsBySection]);
   const availableExtras = useMemo(() => menu.extras.filter((option) => {
     if (option.onlyWithIngredients && !activeProduct?.hasIngredients) return false;
@@ -83,6 +135,15 @@ export default function MenuExperience() {
   const activeBasePrice = useMemo(() => activeProduct ? selectionBasePrice(activeProduct, snackFlavor, bagFilling) : 0, [activeProduct, bagFilling, snackFlavor]);
   const activePrice = useMemo(() => activeBasePrice + selectedExtras.reduce((sum, option) => sum + option.price, 0), [activeBasePrice, selectedExtras]);
   const total = useMemo(() => cart.reduce((sum, item) => sum + cartItemTotal(item), 0), [cart]);
+  const isOpen = status?.open !== false;
+
+  useEffect(() => {
+    setCart((items) => items.filter((item) => {
+      const currentProduct = menu.products.find((product) => product.id === item.product.id);
+      const currentFilling = item.bagFilling ? menu.products.find((product) => product.id === item.bagFilling?.id) : undefined;
+      return currentProduct?.available !== false && currentProduct !== undefined && (!item.bagFilling || (currentFilling !== undefined && currentFilling.available !== false));
+    }));
+  }, [menu.products]);
 
   const openCustomizer = (product: Product, options: CustomizeOptions = {}) => {
     setActiveProduct(product);
@@ -131,12 +192,14 @@ export default function MenuExperience() {
       return String(index + 1) + '. *' + item.product.name + '* — ' + money(cartItemTotal(item)) + '\n   ' + details;
     }).join('\n\n');
     const payment = customer.payment === 'change' ? 'Sí, llevar cambio para ' + money(Number(customer.changeFor)) : 'No, pago exacto';
-    const message = '*PEDIDO NUEVO — EL TRUCHITA* 🔥\n\n' + order + '\n\n*TOTAL: ' + money(total) + '*\n\n*Datos de entrega*\nNombre: ' + customer.name + '\nTeléfono: ' + customer.phone + '\nModalidad: Servicio a domicilio\nDirección: ' + customer.address + '\nReferencias: ' + customer.references + '\nUbicación exacta: ' + (customer.exactLocation || 'No compartida') + '\nCambio: ' + payment + '\n\n*Importante:* El pedido se trabajará hasta ser confirmado por El Truchita. Gracias por tu preferencia.';
+    const delivery = deliveryPolicy(total);
+    const message = '*PEDIDO NUEVO — EL TRUCHITA* 🔥\n*Folio:* ' + reference + '\n\n' + order + '\n\n*SUBTOTAL: ' + money(total) + '*\nEnvío: ' + delivery.whatsapp + '\n\n*Datos de entrega*\nNombre: ' + customer.name + '\nTeléfono: ' + customer.phone + '\nModalidad: Servicio a domicilio\nDirección: ' + customer.address + '\nReferencias: ' + customer.references + '\nUbicación exacta: ' + (customer.exactLocation || 'No compartida') + '\nCambio: ' + payment + '\n\n*Importante:* El pedido se trabajará hasta ser confirmado por El Truchita. Gracias por tu preferencia.';
     return 'https://wa.me/' + WHATSAPP_BUSINESS_NUMBER + '?text=' + encodeURIComponent(message);
   };
 
   const handleCheckout = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!isOpen) return;
     setModal('sending');
     window.setTimeout(() => window.location.assign(whatsappUrl()), 1150);
   };
@@ -190,8 +253,8 @@ export default function MenuExperience() {
     {modal !== 'none' && <div className="modal-backdrop" onMouseDown={() => modal !== 'sending' && setModal('none')}><section className={'order-modal ' + modal} role="dialog" aria-modal="true" aria-label="Mi pedido" onMouseDown={(event) => event.stopPropagation()}>
       {modal !== 'sending' && <button className="close-modal" type="button" onClick={() => setModal('none')} aria-label="Cerrar">×</button>}
       {modal === 'customize' && activeProduct && <Customizer activeProduct={activeProduct} activeBasePrice={activeBasePrice} activePrice={activePrice} preparation={preparation} mayo={mayo} queso={queso} setMayo={setMayo} setQueso={setQueso} snackFlavor={snackFlavor} setSnackFlavor={setSnackFlavor} bagFilling={bagFilling} setBagFilling={setBagFilling} bagFillings={bagFillings} availableExtras={availableExtras} selectedExtraIds={selectedExtraIds} toggleExtra={toggleExtra} note={note} setNote={setNote} onAdd={addToCart} />}
-      {modal === 'cart' && <CartView cart={cart} total={total} onRemove={(id) => setCart((items) => items.filter((item) => item.id !== id))} onEmpty={() => setCart([])} onContinue={closeCartToMenu} onCheckout={() => setModal('checkout')} />}
-      {modal === 'checkout' && <CheckoutForm customer={customer} setCustomer={setCustomer} onSubmit={handleCheckout} onBack={() => setModal('cart')} />}
+      {modal === 'cart' && <CartView cart={cart} total={total} isOpen={isOpen} statusLabel={status?.label} onRemove={(id) => setCart((items) => items.filter((item) => item.id !== id))} onEmpty={() => { setCart([]); setReference(''); }} onContinue={closeCartToMenu} onCheckout={() => { if (!isOpen) return; setReference((current) => current || orderReference()); setModal('checkout'); }} />}
+      {modal === 'checkout' && <CheckoutForm customer={customer} setCustomer={setCustomer} total={total} reference={reference} isOpen={isOpen} statusLabel={status?.label} onSubmit={handleCheckout} onBack={() => setModal('cart')} />}
       {modal === 'sending' && <div className="sending-state"><div className="corn-flight" aria-hidden="true"><span>◐</span><i>✦</i><i>✦</i><i>✦</i></div><p className="modal-kicker">PREPARANDO TU MENSAJE</p><h2>¡VA VOLANDO<br />A WHATSAPP!</h2><p>Un momento, ya llevamos tu pedido.</p></div>}
     </section></div>}
   </main>;
@@ -212,12 +275,14 @@ function ToggleRow({ kind, title, description, checked, disabled, onChange }: { 
   return <label className={disabled ? 'switch-row switch-row-visual disabled' : 'switch-row switch-row-visual'}><span className="switch-option-copy"><IngredientReference kind={kind} /><span><b>{title}</b><small>{description}</small></span></span><input disabled={disabled} type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /><i /></label>;
 }
 
-function CartView({ cart, total, onRemove, onEmpty, onContinue, onCheckout }: { cart: CartItem[]; total: number; onRemove: (id: string) => void; onEmpty: () => void; onContinue: () => void; onCheckout: () => void }) {
-  return <><p className="modal-kicker">ESTO ES LO QUE SE VA A LA BRASA</p><h2>MI PEDIDO <span className="cart-count">{cart.length}</span></h2>{cart.length === 0 ? <div className="empty-cart"><span>◌</span><p>Aún no hay antojos aquí.</p><button type="button" onClick={onContinue}>VER EL MENÚ</button></div> : <><div className="cart-list">{cart.map((item) => <article className="cart-item" key={item.id}><div><h3>{item.product.name}</h3><p>{item.preparation === 'muy-mexicano' ? '100% al carbón · ' : ''}{item.snackFlavor ? item.snackFlavor.name + ' · ' : ''}{item.bagFilling ? 'Con ' + item.bagFilling.name + ' · ' : ''}{item.mayo ? 'Con mayo' : 'Sin mayo'} · {item.queso ? 'Con queso' : 'Sin queso'} · {item.extras.length ? item.extras.map((extra) => extra.name).join(', ') : 'Sin extras'}{item.note ? ' · “' + item.note + '”' : ''}</p></div><b>{money(cartItemTotal(item))}</b><button type="button" onClick={() => onRemove(item.id)} aria-label={'Eliminar ' + item.product.name}>×</button></article>)}</div><div className="cart-total"><span>TOTAL</span><strong>{money(total)}</strong></div><div className="cart-actions"><button type="button" className="secondary-action" onClick={onContinue}>SEGUIR ORDENANDO</button><button type="button" className="empty-button" onClick={onEmpty}>VACIAR SELECCIÓN</button></div><button className="wide-action" type="button" onClick={onCheckout}>REALIZAR PEDIDO <span>→</span></button></>}</>;
+function CartView({ cart, total, isOpen, statusLabel, onRemove, onEmpty, onContinue, onCheckout }: { cart: CartItem[]; total: number; isOpen: boolean; statusLabel?: string; onRemove: (id: string) => void; onEmpty: () => void; onContinue: () => void; onCheckout: () => void }) {
+  const delivery = deliveryPolicy(total);
+  return <><p className="modal-kicker">ESTO ES LO QUE SE VA A LA BRASA</p><h2>MI PEDIDO <span className="cart-count">{cart.length}</span></h2>{cart.length === 0 ? <div className="empty-cart"><span>◌</span><p>Aún no hay antojos aquí.</p><button type="button" onClick={onContinue}>VER EL MENÚ</button></div> : <><div className="cart-list">{cart.map((item) => <article className="cart-item" key={item.id}><div><h3>{item.product.name}</h3><p>{item.preparation === 'muy-mexicano' ? '100% al carbón · ' : ''}{item.snackFlavor ? item.snackFlavor.name + ' · ' : ''}{item.bagFilling ? 'Con ' + item.bagFilling.name + ' · ' : ''}{item.mayo ? 'Con mayo' : 'Sin mayo'} · {item.queso ? 'Con queso' : 'Sin queso'} · {item.extras.length ? item.extras.map((extra) => extra.name).join(', ') : 'Sin extras'}{item.note ? ' · “' + item.note + '”' : ''}</p></div><b>{money(cartItemTotal(item))}</b><button type="button" onClick={() => onRemove(item.id)} aria-label={'Eliminar ' + item.product.name}>×</button></article>)}</div><div className="cart-total"><span>SUBTOTAL</span><strong>{money(total)}</strong></div><aside className="delivery-summary"><p>{delivery.title}</p><span>{delivery.detail}</span></aside>{!isOpen && <aside className="closed-notice"><p>{statusLabel ?? 'CERRADO AHORA'}</p><span>Puedes guardar tu antojo, pero los pedidos se habilitan durante nuestro horario de atención.</span></aside>}<div className="cart-actions"><button type="button" className="secondary-action" onClick={onContinue}>SEGUIR ORDENANDO</button><button type="button" className="empty-button" onClick={onEmpty}>VACIAR SELECCIÓN</button></div><button className="wide-action" type="button" disabled={!isOpen} onClick={onCheckout}>{isOpen ? 'REALIZAR PEDIDO' : 'PEDIDOS CERRADOS'} <span>→</span></button></>}</>;
 }
 
-function CheckoutForm({ customer, setCustomer, onSubmit, onBack }: { customer: CustomerDetails; setCustomer: (value: CustomerDetails) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onBack: () => void }) {
+function CheckoutForm({ customer, setCustomer, total, reference, isOpen, statusLabel, onSubmit, onBack }: { customer: CustomerDetails; setCustomer: (value: CustomerDetails) => void; total: number; reference: string; isOpen: boolean; statusLabel?: string; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onBack: () => void }) {
   const [locationStatus, setLocationStatus] = useState('');
+  const delivery = deliveryPolicy(total);
 
   const shareExactLocation = () => {
     if (!navigator.geolocation) {
@@ -232,16 +297,16 @@ function CheckoutForm({ customer, setCustomer, onSubmit, onBack }: { customer: C
     }, () => setLocationStatus('No pudimos obtenerla. Revisa el permiso o pega un enlace de Google Maps.'), { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
   };
 
-  return <form onSubmit={onSubmit}><p className="modal-kicker">SERVICIO ÚNICAMENTE A DOMICILIO</p><h2>¿A NOMBRE DE QUIÉN?</h2><p className="checkout-note">Estos datos van incluidos en tu mensaje de WhatsApp.</p><div className="customer-form"><label><span>NOMBRE</span><input required autoComplete="name" value={customer.name} onChange={(event) => setCustomer({ ...customer, name: event.target.value })} placeholder="Tu nombre" /></label><label><span>TELÉFONO</span><input required type="tel" inputMode="tel" autoComplete="tel" value={customer.phone} onChange={(event) => setCustomer({ ...customer, phone: event.target.value })} placeholder="Tu número" /></label><div className="delivery-only">ENTREGA A DOMICILIO</div><label><span>DIRECCIÓN</span><input required autoComplete="street-address" value={customer.address} onChange={(event) => setCustomer({ ...customer, address: event.target.value })} placeholder="Calle, número y colonia" /></label><label className="form-wide"><span>REFERENCIAS</span><textarea required value={customer.references} onChange={(event) => setCustomer({ ...customer, references: event.target.value })} placeholder="Color de portón, entre calles o cualquier referencia." /></label><div className="form-wide location-field"><span>UBICACIÓN EXACTA <small>OPCIONAL, MUY ÚTIL PARA EL REPARTIDOR</small></span><div><input value={customer.exactLocation} onChange={(event) => setCustomer({ ...customer, exactLocation: event.target.value })} placeholder="Pega un enlace de Google Maps" /><button type="button" onClick={shareExactLocation}>USAR MI UBICACIÓN ACTUAL <b>⌖</b></button></div>{locationStatus && <p role="status">{locationStatus}</p>}</div><fieldset className="form-wide payment-choice"><legend>¿PAGARÁS CON CAMBIO?</legend><div><label className={customer.payment === 'exact' ? 'selected' : ''}><input type="radio" name="payment" checked={customer.payment === 'exact'} onChange={() => setCustomer({ ...customer, payment: 'exact', changeFor: '' })} /><span><b>NO, LLEVO PAGO EXACTO</b><small>Así la entrega es más ágil.</small></span></label><label className={customer.payment === 'change' ? 'selected' : ''}><input type="radio" name="payment" checked={customer.payment === 'change'} onChange={() => setCustomer({ ...customer, payment: 'change' })} /><span><b>SÍ, NECESITO CAMBIO</b><small>Indícanos con cuánto pagarás.</small></span></label></div>{customer.payment === 'change' && <label className="change-field"><span>NECESITO CAMBIO PARA</span><input required type="number" min="1" inputMode="numeric" value={customer.changeFor} onChange={(event) => setCustomer({ ...customer, changeFor: event.target.value })} placeholder="Ej. 200" /><b>MXN</b></label>}</fieldset></div><aside className="delivery-notice"><p>AVISO DE ENVÍO</p><strong>EL COSTO DEPENDE DE LA DISTANCIA.</strong><span>En pedidos de <b>$400 o más</b>, el envío es gratis. Entre <b>$250 y $300</b>, nosotros cubrimos la mitad; por debajo de $250, corre por cuenta del cliente.</span><small>El tiempo de preparación y entrega puede variar según tu pedido, la disponibilidad del repartidor y cualquier contratiempo en el camino.</small></aside><aside className="order-confirmation"><p>IMPORTANTE</p><strong>TU ORDEN SE TRABAJARÁ HASTA QUE SEA CONFIRMADA POR EL NEGOCIO.</strong><span>Gracias por tu preferencia. En breve te responderemos por WhatsApp.</span></aside><button className="wide-action" type="submit">ENVIAR A WHATSAPP <span>↗</span></button><button className="back-button" type="button" onClick={onBack}>← VOLVER A MI PEDIDO</button></form>;
+  return <form onSubmit={onSubmit}><p className="modal-kicker">SERVICIO ÚNICAMENTE A DOMICILIO</p><h2>¿A NOMBRE DE QUIÉN?</h2><p className="checkout-note">Folio {reference}. Estos datos van incluidos en tu mensaje de WhatsApp.</p>{!isOpen && <aside className="closed-notice"><p>{statusLabel ?? 'CERRADO AHORA'}</p><span>El formulario se puede revisar, pero los pedidos se habilitan en horario de atención.</span></aside>}<div className="customer-form"><label><span>NOMBRE</span><input required autoComplete="name" value={customer.name} onChange={(event) => setCustomer({ ...customer, name: event.target.value })} placeholder="Tu nombre" /></label><label><span>TELÉFONO</span><input required type="tel" inputMode="numeric" autoComplete="tel" pattern="[0-9]{10}" maxLength={10} title="Escribe un número de 10 dígitos" value={customer.phone} onChange={(event) => setCustomer({ ...customer, phone: event.target.value.replace(/\D/g, '').slice(0, 10) })} placeholder="10 dígitos" /></label><div className="delivery-only">ENTREGA A DOMICILIO</div><label><span>DIRECCIÓN</span><input required autoComplete="street-address" value={customer.address} onChange={(event) => setCustomer({ ...customer, address: event.target.value })} placeholder="Calle, número y colonia" /></label><label className="form-wide"><span>REFERENCIAS <small>OPCIONAL</small></span><textarea value={customer.references} onChange={(event) => setCustomer({ ...customer, references: event.target.value })} placeholder="Color de portón, entre calles o cualquier referencia." /></label><div className="form-wide location-field"><span>UBICACIÓN EXACTA <small>OPCIONAL, MUY ÚTIL PARA EL REPARTIDOR</small></span><div><input type="url" value={customer.exactLocation} onChange={(event) => setCustomer({ ...customer, exactLocation: event.target.value })} placeholder="Pega un enlace de Google Maps" /><button type="button" onClick={shareExactLocation}>USAR MI UBICACIÓN ACTUAL <b>⌖</b></button></div>{locationStatus && <p role="status">{locationStatus}</p>}</div><fieldset className="form-wide payment-choice"><legend>¿PAGARÁS CON CAMBIO?</legend><div><label className={customer.payment === 'exact' ? 'selected' : ''}><input type="radio" name="payment" checked={customer.payment === 'exact'} onChange={() => setCustomer({ ...customer, payment: 'exact', changeFor: '' })} /><span><b>NO, LLEVO PAGO EXACTO</b><small>Así la entrega es más ágil.</small></span></label><label className={customer.payment === 'change' ? 'selected' : ''}><input type="radio" name="payment" checked={customer.payment === 'change'} onChange={() => setCustomer({ ...customer, payment: 'change' })} /><span><b>SÍ, NECESITO CAMBIO</b><small>Indícanos con cuánto pagarás.</small></span></label></div>{customer.payment === 'change' && <label className="change-field"><span>NECESITO CAMBIO PARA</span><input required type="number" min="1" inputMode="numeric" value={customer.changeFor} onChange={(event) => setCustomer({ ...customer, changeFor: event.target.value })} placeholder="Ej. 200" /><b>MXN</b></label>}</fieldset></div><aside className="delivery-notice"><p>{delivery.title}</p><strong>{delivery.detail}</strong><span>La dirección se valida antes de preparar. El tiempo puede variar por tu pedido, la disponibilidad del repartidor y contratiempos en el camino.</span></aside><aside className="privacy-note"><strong>TUS DATOS, SOLO PARA TU PEDIDO.</strong><span>Se usan para preparar y entregar esta orden; se comparten con El Truchita en tu mensaje de WhatsApp.</span></aside><aside className="order-confirmation"><p>IMPORTANTE</p><strong>TU ORDEN SE TRABAJARÁ HASTA QUE SEA CONFIRMADA POR EL NEGOCIO.</strong><span>Gracias por tu preferencia. En breve te responderemos por WhatsApp.</span></aside><button className="wide-action" type="submit" disabled={!isOpen}>{isOpen ? 'ENVIAR A WHATSAPP' : 'PEDIDOS CERRADOS'} <span>↗</span></button><button className="back-button" type="button" onClick={onBack}>← VOLVER A MI PEDIDO</button></form>;
 }
 
 function MenuSection({ eyebrow, title, products, onChoose, accent = false }: { eyebrow: string; title: string; products: Product[]; onChoose: (product: Product, options?: CustomizeOptions) => void; accent?: boolean }) {
   const isCorn = products.some((product) => product.service === 'corn');
-  return <div className={accent ? 'menu-section menu-section-accent' : 'menu-section'}><header><p>{eyebrow}</p><h2>{title}</h2>{isCorn && <p className="elote-extra-note">Si el elote no es suficiente, agrega tocino, salchicha, quesos fundidos o una porción de maíz asado por <b>$25 c/u.</b></p>}</header><div className="product-grid">{products.map((product, index) => <article className={product.id === 'truchita' ? 'product-card product-card-featured' : 'product-card'} key={product.id}><div className="product-number">{String(index + 1).padStart(2, '0')}</div><figure className="product-thumb"><img src={product.image || '/esquite-callejero.png'} alt={'Referencia de ' + product.name} /></figure><div className="product-copy">{product.tag && <span className="product-tag">{product.tag}</span>}<h3>{product.name}</h3><p>{product.description}</p></div><strong>{money(product.price)}</strong><button type="button" onClick={() => onChoose(product)}>PERSONALIZAR <span>+</span></button></article>)}</div></div>;
+  return <div className={accent ? 'menu-section menu-section-accent' : 'menu-section'}><header><p>{eyebrow}</p><h2>{title}</h2>{isCorn && <p className="elote-extra-note">Si el elote no es suficiente, agrega tocino, salchicha, quesos fundidos o una porción de maíz asado por <b>$25 c/u.</b></p>}</header>{products.length ? <div className="product-grid">{products.map((product, index) => <article className={product.id === 'truchita' ? 'product-card product-card-featured' : 'product-card'} key={product.id}><div className="product-number">{String(index + 1).padStart(2, '0')}</div><figure className="product-thumb"><img src={product.image || '/esquite-callejero.png'} alt={'Referencia de ' + product.name} /></figure><div className="product-copy">{product.tag && <span className="product-tag">{product.tag}</span>}<h3>{product.name}</h3><p>{product.description}</p></div><strong>{money(product.price)}</strong><button type="button" onClick={() => onChoose(product)}>PERSONALIZAR <span>+</span></button></article>)}</div> : <div className="empty-section">POR AHORA ESTA SECCIÓN ESTÁ DESCANSANDO EN EL ASADOR. VUELVE PRONTO.</div>}</div>;
 }
 
 function BagSection({ product, fillings, onChoose }: { product?: Product; fillings: Product[]; onChoose: (product: Product, options?: CustomizeOptions) => void }) {
-  if (!product) return <div className="bag-section-empty">Próximamente habrá una nueva bolsa para elegir.</div>;
+  if (!product || !fillings.length) return <div className="bag-section-empty">POR AHORA ESTA OPCIÓN NO ESTÁ DISPONIBLE. VUELVE PRONTO.</div>;
   return <div className="bag-section"><div className="bag-section-copy"><p className="section-kicker light">ABRIMOS LA BOTANA. EL RESTO LO ARMAS A TU GUSTO.</p><span className="bag-price">BOTANA + ESQUITE A TU ELECCIÓN</span><h2>UN GUSTITO<br /><em>MÁS.</em></h2><p>Elige la botana y el esquite clásico o especial que quieres dentro. Verás el total de tu combinación antes de agregar extras.</p></div><figure className="bag-main-photo"><img src="/botanas-en-bolsa.png" alt="Bolsas de botana de distintos sabores sobre una mesa con chiles y limón" /><figcaption>UNA BOLSA · EL ESQUITE QUE TÚ ELIJAS</figcaption></figure><div className="bag-flavor-area"><p>¿QUÉ BOTANA SE TE ANTOJA?</p><div className="bag-flavor-stack">{snackFlavors.map((flavor, index) => <button type="button" className={'bag-flavor flavor-' + flavor.color} style={{ '--flavor-index': index } as CSSProperties} key={flavor.id} onClick={() => onChoose(product, { snackFlavor: flavor, bagFilling: fillings[0] })}><span>0{index + 1}</span><b>{flavor.name}</b><small>{flavor.note}</small><i>+</i></button>)}</div><small className="bag-hint">ELIGE TU BOTANA Y DESPUÉS DECIDE QUÉ ESQUITE VA DENTRO</small></div></div>;
 }
 
@@ -250,7 +315,7 @@ function MuyMexicanoSection({ productsBySection, bagFillings, onChoose }: { prod
     { name: 'CLÁSICOS', detail: 'La base de siempre, directo del carbón.', products: productsBySection.traditional },
     { name: 'ESPECIALES', detail: 'Sabores de la casa con el fuego al frente.', products: productsBySection.specialty },
     { name: 'ELOTES', detail: 'Enteros, asados y sin rodeos.', products: productsBySection.elotes },
-    { name: 'UN GUSTITO MÁS', detail: 'Tu botana y tu esquite preferido, a las brasas.', products: productsBySection.bolsa },
-  ];
+    { name: 'UN GUSTITO MÁS', detail: 'Tu botana y tu esquite preferido, a las brasas.', products: bagFillings.length ? productsBySection.bolsa : [] },
+  ].filter((group) => group.products.length);
   return <div className="mexican-section"><header><p>MAÍZ, FUEGO Y TRADICIÓN, COMO DEBE SER.</p><h2>MUY MEXICANO</h2></header><div className="mexican-intro"><div><p>100% AL CARBÓN</p><strong>EL SABOR DEL MAÍZ CUANDO LO DEJAS HABLAR.</strong><span>Estas preparaciones salen del asador sin mantequilla, epazote ni especias añadidas. Mayonesa y queso son opcionales y se sirven aparte.</span></div><div className="mexican-reference-images"><img src="/elote-brasa-real.jpeg" alt="Elote asado a las brasas" /><img src="/fogon-carbon-real.jpeg" alt="Preparación sobre brasas" /></div></div><div className="mexican-family-grid">{groups.map((group) => <article key={group.name}><p>{group.name}</p><span>{group.detail}</span><div>{group.products.map((product) => <button key={product.id} type="button" onClick={() => onChoose(product, { preparation: 'muy-mexicano', snackFlavor: snackFlavors[0], bagFilling: bagFillings[0] })}><b>{product.name}</b><small>{product.service === 'bag' ? 'A TU ELECCIÓN' : money(product.price)}</small><i>↗</i></button>)}</div></article>)}</div></div>;
 }

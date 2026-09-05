@@ -193,6 +193,30 @@ body { background-color: #0d0c0a; background-image: repeating-linear-gradient(0d
   .location-field button { min-height: 45px; }
   .change-field { grid-template-columns: 1fr auto; }
 }
+
+/* Reglas de pedido, disponibilidad y lectura en el cierre de compra. */
+.delivery-summary, .closed-notice, .privacy-note { display: grid; gap: 5px; margin: 0 0 17px; padding: 12px 13px; }
+.delivery-summary { background: #f6e1c0; border-left: 4px solid var(--maize); color: #211f1a; }
+.delivery-summary p, .closed-notice p { font-size: 10px; font-weight: 900; letter-spacing: .12em; margin: 0; }
+.delivery-summary p { color: var(--fire); }
+.delivery-summary span, .closed-notice span, .privacy-note span { font-size: 12px; font-weight: 700; line-height: 1.38; }
+.closed-notice { background: #281610; border-left: 4px solid var(--fire); color: var(--bone); }
+.closed-notice p { color: var(--maize); }
+.privacy-note { background: #eee5d3; border-left: 4px solid #837967; color: #332f29; margin-top: 16px; }
+.privacy-note strong { font-size: 10px; letter-spacing: .1em; }
+.wide-action:disabled { background: #766e63; box-shadow: none; cursor: not-allowed; transform: none; }
+.empty-section, .bag-section-empty { border: 1px solid rgba(245,181,27,.42); color: #d1c8b7; font-size: 13px; font-weight: 800; letter-spacing: .06em; line-height: 1.45; padding: 25px; }
+.admin-product.unavailable { box-shadow: inset 4px 0 0 var(--fire); opacity: .72; }
+.availability-toggle { color: var(--fire); }
+.customer-form label > span, .location-field > span, .payment-choice legend, .change-field > span { font-size: 11px; }
+.location-field > span small, .customer-form label > span small { font-size: 9px; }
+.location-field button, .payment-choice label b, .delivery-notice p, .order-confirmation p { font-size: 10px; }
+.product-card > button, .menu-bottom-line span, .menu-bottom-line button, .header-order, footer button { font-size: 11px; }
+
+@media (max-width: 720px) {
+  .delivery-summary span, .closed-notice span, .privacy-note span { font-size: 12px; }
+  .product-card > button, .menu-bottom-line span, .menu-bottom-line button { font-size: 11px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .arcade-menu-transition * { animation-duration: .01ms !important; }
 }
