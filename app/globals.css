@@ -263,3 +263,74 @@ body { background-color: #0d0c0a; background-image: repeating-linear-gradient(0d
   .hero-maicito img, .hero-maicito.is-sad img { width: 55px; }
   .hero-maicito p { font-size: 11px; }
 }
+
+/* El menú se juega por niveles: guiños de maquinita sin perder el puesto mexicano. */
+.arcade-level-select { border-bottom: 1px solid rgba(241,235,220,.28); border-top: 2px solid var(--maize); display: grid; gap: 26px; grid-template-columns: minmax(190px,.58fr) minmax(0,1.42fr); margin: 0 0 21px; padding: 25px 0 29px; }
+.arcade-level-heading { align-self: center; display: grid; gap: 8px; }
+.arcade-level-heading p, .arcade-level-heading > span { color: var(--ember); font-size: 9px; font-weight: 900; letter-spacing: .17em; margin: 0; }
+.arcade-level-heading > span { color: #bfb6a4; line-height: 1.35; }
+.arcade-level-heading h2 { color: var(--bone); font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; font-size: clamp(38px,4.9vw,70px); letter-spacing: -.015em; line-height: .79; margin: 0; }
+.arcade-level-heading h2 em { color: var(--maize); font-style: normal; }
+.level-card-grid { display: grid; gap: 7px; grid-template-columns: repeat(5,minmax(0,1fr)); }
+.level-card { background: #1b1a16; border: 1px solid #625b4f; color: var(--bone); display: grid; gap: 6px; min-height: 170px; overflow: hidden; padding: 13px; position: relative; text-align: left; transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.level-card::before { background: repeating-linear-gradient(90deg, transparent 0 7px, rgba(255,255,255,.035) 7px 8px); content: ''; inset: 0; pointer-events: none; position: absolute; }
+.level-card > * { position: relative; z-index: 1; }
+.level-card:hover, .level-card:focus-visible { border-color: var(--maize); box-shadow: 4px 4px 0 var(--fire); outline: 0; transform: translate(-2px,-3px); }
+.level-card.active { background: linear-gradient(150deg,#3a2614,#1d1813 62%); border-color: var(--maize); box-shadow: inset 3px 0 0 var(--maize), 4px 4px 0 rgba(198,49,22,.78); }
+.level-card:not(.visited) { animation: arcade-new-pulse 2.1s ease-in-out infinite; }
+.level-card-number { color: #c9c1b2; font-size: 8px; font-weight: 900; letter-spacing: .13em; }
+.level-card i { color: var(--maize); font-size: 25px; font-style: normal; line-height: 1; text-shadow: 2px 2px 0 var(--fire); }
+.level-card strong { font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; font-size: clamp(18px,1.8vw,27px); letter-spacing: .025em; line-height: .9; overflow-wrap: anywhere; }
+.level-card small { color: #c7beae; font-size: 9px; font-weight: 700; line-height: 1.25; }
+.level-card b { color: var(--ember); font-size: 8px; font-weight: 900; letter-spacing: .12em; margin-top: auto; }
+.level-card.visited b { color: #a59d8f; }
+.level-specialty { border-color: rgba(240,75,29,.62); }.level-elotes { border-color: rgba(245,181,27,.55); }.level-bolsa { border-color: rgba(191,69,29,.7); }.level-muy-mexicano { border-color: rgba(144,157,53,.56); }
+.arcade-mini-map { background: #11110f; position: sticky; top: 0; z-index: 8; }
+.menu-tabs button { align-items: center; display: inline-flex; gap: 7px; }
+.menu-tabs button span { color: var(--ember); font-family: monospace; font-size: 9px; font-weight: 900; }
+.menu-tabs button.active span { color: #1a1710; }
+.menu-tabs button.unvisited::after { background: var(--ember); border-radius: 50%; box-shadow: 0 0 7px rgba(240,75,29,.85); content: ''; height: 5px; margin-left: 1px; width: 5px; }
+.menu-tabs button.unvisited { border-color: rgba(245,181,27,.33); }
+
+/* Personalizar se siente como armar una charola en una maquinita. */
+.customizer-arcade-top { background: #211f1a; border: 1px solid #746957; display: grid; grid-template-columns: 145px minmax(0,1fr); margin: 0 0 14px; min-width: 0; }
+.tray-preview { background: #151411; margin: 0; min-height: 130px; overflow: hidden; position: relative; }
+.tray-preview::after { background: linear-gradient(0deg,rgba(4,4,3,.66),transparent 50%); content: ''; inset: 0; pointer-events: none; position: absolute; }
+.tray-preview.has-extras::before { animation: preview-ember 1.7s ease-in-out infinite alternate; background: radial-gradient(circle,rgba(245,181,27,.45),transparent 57%); content: ''; height: 120px; left: -28px; position: absolute; top: -19px; width: 120px; z-index: 1; }
+.tray-preview img { display: block; filter: saturate(.92) contrast(1.1); height: 100%; inset: 0; object-fit: cover; position: absolute; width: 100%; }
+.preview-charcoal { bottom: 8px; color: var(--maize); font-size: 8px; font-weight: 900; left: 9px; letter-spacing: .13em; position: absolute; text-shadow: 1px 1px 0 #000; z-index: 2; }
+.preview-chip { background: var(--bone); border: 1px solid #211f1a; color: #211f1a; font-size: 7px; font-weight: 900; letter-spacing: .08em; padding: 3px 4px; position: absolute; right: 7px; z-index: 3; }
+.chip-mayo { top: 7px; }.chip-queso { background: var(--maize); top: 31px; }.chip-extra { background: var(--ember); color: var(--bone); top: 55px; }
+.arcade-score { align-content: center; display: grid; gap: 5px; padding: 15px; }
+.arcade-score span, .arcade-score small, .arcade-score b { font-size: 9px; font-weight: 900; letter-spacing: .12em; }
+.arcade-score span { color: #c8c0b2; }.arcade-score strong { color: var(--maize); font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; font-size: 43px; letter-spacing: .01em; line-height: .86; text-shadow: 2px 2px 0 var(--fire); }.arcade-score small { color: var(--bone); line-height: 1.25; }.arcade-score b { color: var(--ember); margin-top: 3px; }
+.customizer-steps { display: grid; gap: 5px; grid-template-columns: repeat(3,1fr); list-style: none; margin: 0 0 17px; padding: 0; }
+.customizer-steps li { border-bottom: 2px solid #aaa090; color: #6e665a; font-size: 9px; font-weight: 900; letter-spacing: .1em; padding: 0 0 7px; }
+.customizer-steps li.active { border-color: var(--fire); color: #211e19; }.customizer-steps span { color: var(--fire); margin-right: 4px; }
+.customizer-step-label { align-items: end; border-bottom: 1px dashed #968b7c; display: grid; gap: 3px 8px; grid-template-columns: auto 1fr; padding: 16px 0 9px; }
+.customizer-step-label span { color: var(--fire); font-family: Impact, sans-serif; font-size: 22px; line-height: .8; }.customizer-step-label b { font-size: 10px; letter-spacing: .13em; }.customizer-step-label small { color: #696155; font-size: 10px; font-weight: 700; grid-column: 2; }
+.charcoal-bet { align-items: center; background: #211e19; border: 0; color: var(--bone); display: grid; gap: 1px 9px; grid-template-columns: minmax(0,1fr) auto; margin: 13px 0 1px; min-height: 58px; padding: 10px 13px; text-align: left; width: 100%; }
+.charcoal-bet:hover { background: #393026; }.charcoal-bet span { color: var(--maize); font-size: 10px; font-weight: 900; letter-spacing: .11em; }.charcoal-bet small { color: #d5cbbb; font-size: 10px; font-weight: 700; line-height: 1.22; }.charcoal-bet b { color: var(--ember); font-size: 24px; grid-column: 2; grid-row: 1 / span 2; }
+.arcade-add { box-shadow: 4px 4px 0 #6d1d10; margin-top: 16px; }
+
+/* Ticket y medidor antes de enviar el pedido. */
+.arcade-receipt { align-items: center; border-bottom: 1px dashed #827767; border-top: 1px dashed #827767; color: #4e473e; display: flex; font-family: monospace; font-size: 9px; font-weight: 900; justify-content: space-between; letter-spacing: .09em; margin: 16px 0 0; padding: 9px 0; }
+.arcade-receipt b { color: var(--fire); letter-spacing: .18em; }.checkout-receipt { background: rgba(245,181,27,.1); border: 1px dashed #a27e36; display: grid; gap: 3px; grid-template-columns: 1fr auto; margin: 0 0 18px; padding: 10px 11px; }.checkout-receipt span { grid-column: 1 / -1; }.checkout-receipt strong { color: var(--fire); font-family: Impact, sans-serif; font-size: 32px; letter-spacing: .01em; line-height: .9; }.checkout-receipt b { align-self: end; }
+.craving-meter { align-items: center; display: grid; gap: 6px 10px; grid-template-columns: auto minmax(70px,1fr) auto; margin: -3px 0 19px; }.craving-meter > span, .craving-meter > b { font-size: 9px; font-weight: 900; letter-spacing: .09em; }.craving-meter > span { color: #423c34; }.craving-meter > b { color: var(--fire); }.craving-meter > div { background: #c7bdab; height: 8px; overflow: hidden; }.craving-meter i { background: linear-gradient(90deg,var(--maize),var(--fire)); display: block; height: 100%; transition: width .28s ease; }
+.cart-added-message > div { display: grid; gap: 7px; }.cart-added-message button { background: transparent; border: 0; border-bottom: 1px solid var(--fire); color: var(--fire); font-size: 9px; font-weight: 900; justify-self: start; letter-spacing: .1em; padding: 4px 0; }
+
+@keyframes arcade-new-pulse { 0%,100% { box-shadow: inset 0 0 0 rgba(245,181,27,0); } 50% { box-shadow: inset 0 0 0 1px rgba(245,181,27,.45),0 0 13px rgba(240,75,29,.16); } }
+@keyframes preview-ember { to { opacity: .3; transform: scale(1.28); } }
+
+@media (max-width: 720px) {
+  .arcade-level-select { display: block; padding: 22px 0 24px; }
+  .arcade-level-heading { margin-bottom: 17px; }.arcade-level-heading h2 { font-size: 48px; }
+  .level-card-grid { display: flex; margin-right: -20px; overflow-x: auto; padding: 2px 20px 7px 2px; scrollbar-width: none; }.level-card-grid::-webkit-scrollbar { display: none; }.level-card { flex: 0 0 136px; min-height: 158px; }.level-card strong { font-size: 20px; }
+  .arcade-mini-map { top: 0; }.menu-tabs button { font-size: 8px; }
+  .customizer-arcade-top { grid-template-columns: 118px minmax(0,1fr); }.tray-preview { min-height: 124px; }.arcade-score { padding: 12px; }.arcade-score strong { font-size: 37px; }.arcade-score small { font-size: 8px; }
+  .customizer-steps li { font-size: 8px; }.customizer-step-label { padding-top: 14px; }.charcoal-bet { min-height: 62px; }.arcade-receipt { font-size: 8px; }.craving-meter { grid-template-columns: 1fr auto; }.craving-meter > div { grid-column: 1 / -1; grid-row: 2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .level-card:not(.visited), .tray-preview.has-extras::before { animation: none; }
+}

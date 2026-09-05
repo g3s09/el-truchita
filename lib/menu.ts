@@ -30,16 +30,17 @@ export type MenuData = {
   updatedAt: string;
 };
 
-const productImage = '/esquite-callejero.png';
+const productImage = '/esquites-charola-carbon.png';
 const cornImage = '/hero-corn.png';
 const bagImage = '/botanas-en-bolsa.png';
+const legacyCupImages = new Set(['/esquite-callejero.png', '/tradicional-clasico.png', '/tradicional-tocino.png', '/tradicional-salchicha.png', '/tradicional-tocino-salchicha.png', '/tradicional-tocino-queso.png', '/tradicional-salchicha-queso.png']);
 const traditionalImages = {
-  clasico: '/tradicional-clasico.png',
-  tocino: '/tradicional-tocino.png',
-  salchicha: '/tradicional-salchicha.png',
-  'tocino-salchicha': '/tradicional-tocino-salchicha.png',
-  'tocino-queso': '/tradicional-tocino-queso.png',
-  'salchicha-queso': '/tradicional-salchicha-queso.png',
+  clasico: productImage,
+  tocino: productImage,
+  salchicha: productImage,
+  'tocino-salchicha': productImage,
+  'tocino-queso': productImage,
+  'salchicha-queso': productImage,
 };
 
 export const defaultMenu: MenuData = {
@@ -109,7 +110,7 @@ export function normalizeMenu(menu: MenuData): MenuData {
   const defaultsById = new Map(defaultMenu.products.map((product) => [product.id, product]));
   const products = savedProducts.map((product) => {
     const catalogProduct = defaultsById.get(product.id);
-    if (catalogProduct && product.image === productImage && catalogProduct.image !== productImage) {
+    if (catalogProduct && product.service === 'cup' && legacyCupImages.has(product.image)) {
       return { ...product, image: catalogProduct.image, available: product.available !== false };
     }
     return { ...product, available: product.available !== false };
