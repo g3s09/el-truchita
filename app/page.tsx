@@ -1,11 +1,41 @@
 'use client';
 
-import { MouseEvent, useState } from 'react';
+import { MouseEvent, useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import InstallPrompt from '@/components/InstallPrompt';
 
+const saturdayMessage = 'Te extraño, pronto nos veremos. Hoy me tocó sobrevivir a la uni.';
+const welcomeMessages = [
+  'El día ya te cobró caro. Mínimo cóbrale un esquite.',
+  'Tus problemas no se arreglan, pero con queso se ven menos graves.',
+  'Si todo se fue al carbón, que al menos tenga limón y chile.',
+  'Aquí no juzgamos tus decisiones; solo las servimos con mayonesa.',
+  'No podemos sanar tu vida, pero sí ponerle Doritos.',
+  'A esta hora, pedir esquites cuenta como autocuidado. Tu terapeuta no necesita saber.',
+  'Tu vida no tiene sazón, pero esto sí puede arreglar una parte.',
+  'El destino no existe; el antojo sí. Y viene con chile.',
+  'No prometemos respuestas, solo un vasito que no te va a dejar en visto.',
+  'Si el día te dio la espalda, nosotros te damos queso.',
+];
+
+function randomWelcome() {
+  const last = window.sessionStorage.getItem('truchita-welcome-phrase');
+  const options = welcomeMessages.filter((message) => message !== last);
+  const message = options[Math.floor(Math.random() * options.length)] ?? welcomeMessages[0];
+  window.sessionStorage.setItem('truchita-welcome-phrase', message);
+  return message;
+}
+
 export default function Home() {
   const [openingMenu, setOpeningMenu] = useState(false);
+  const [isSaturday, setIsSaturday] = useState(false);
+  const [maicitoMessage, setMaicitoMessage] = useState(welcomeMessages[0]);
+
+  useEffect(() => {
+    const weekday = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Mexico_City', weekday: 'short' }).format(new Date());
+    setIsSaturday(weekday === 'Sat');
+    setMaicitoMessage(randomWelcome());
+  }, []);
 
   const openMenu = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
@@ -25,7 +55,7 @@ export default function Home() {
       <div className="hero-photo" /><div className="hero-ink" /><div className="hero-grain" aria-hidden="true" /><div className="vintage-burn burn-one" aria-hidden="true" /><div className="vintage-burn burn-two" aria-hidden="true" />
       <div className="smoke smoke-one" aria-hidden="true" /><div className="smoke smoke-two" aria-hidden="true" />
       <div className="ember-field" aria-hidden="true">{[['7%', '21%', '0s'], ['27%', '79%', '1.2s'], ['55%', '16%', '2.1s'], ['68%', '68%', '.7s'], ['91%', '32%', '1.6s']].map(([left, top, delay]) => <i className="ember" key={left} style={{ left, top, animationDelay: delay }} />)}</div>
-      <div className="hero-content"><p className="eyebrow"><span />ZACAPOAXTLA, PUEBLA <span /></p><h1 id="hero-title"><span className="esquites">ESQUITES</span><span className="truchita">EL TRUCHITA</span><span className="carbon">AL CARBÓN</span></h1><p className="hero-sentence">Honramos el maíz, el fuego y la tradición que nos une.<br />Sabor mexicano, hecho especialmente para ti.</p><p className="hero-detail">Elote asado al carbón, desgranado y preparado al momento.</p><div className="hero-actions"><a className="button button-fire" href="/menu" onClick={openMenu}>VER MENÚ <span>↓</span></a></div></div>
+      <div className="hero-content"><p className="eyebrow"><span />ZACAPOAXTLA, PUEBLA <span /></p><h1 id="hero-title"><span className="esquites">ESQUITES</span><span className="truchita">EL TRUCHITA</span><span className="carbon">AL CARBÓN</span></h1><p className="hero-sentence">Honramos el maíz, el fuego y la tradición que nos une.<br />Sabor mexicano, hecho especialmente para ti.</p><p className="hero-detail">Elote asado al carbón, desgranado y preparado al momento.</p><aside className={isSaturday ? 'hero-maicito is-sad' : 'hero-maicito'} aria-live="polite"><img src={isSaturday ? '/maicito-truchita-triste.png' : '/maicito-truchita.png'} alt="" /><p>{isSaturday ? saturdayMessage : maicitoMessage}</p></aside><div className="hero-actions"><a className="button button-fire" href="/menu" onClick={openMenu}>VER MENÚ <span>↓</span></a></div></div>
       <aside className="future-space" id="domicilio"><p>PRÓXIMAMENTE</p><strong>UN RINCÓN PARA DISFRUTARLO CON CALMA.</strong><span>Estamos preparando un espacio para que nuestros clientes degusten su preparación tranquilamente.</span></aside>
       <div className="hero-edge"><span>SOLO A DOMICILIO</span><b>✦</b><span>DOM–VIE · 6:30 P. M. — 12:30 A. M.</span><b>✦</b><span>SÁBADO CERRADO</span></div>
     </section>

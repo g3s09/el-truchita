@@ -10,7 +10,7 @@ type CustomizeOptions = { snackFlavor?: SnackFlavor; bagFilling?: Product; prepa
 type CartItem = { id: string; product: Product; mayo: boolean; queso: boolean; extras: ExtraOption[]; note: string; snackFlavor?: SnackFlavor; bagFilling?: Product; preparation: Preparation };
 type Modal = 'none' | 'customize' | 'cart' | 'checkout' | 'sending';
 type CustomerDetails = { name: string; phone: string; address: string; references: string; exactLocation: string; payment: 'exact' | 'change'; changeFor: string };
-type BusinessStatus = { open: boolean; label: string };
+type BusinessStatus = { open: boolean; label: string; isSaturday: boolean };
 type DeliveryPolicy = { title: string; detail: string; whatsapp: string };
 
 const WHATSAPP_BUSINESS_NUMBER = '522204419169';
@@ -22,6 +22,37 @@ const snackFlavors: SnackFlavor[] = [
   { id: 'cheetos-flamin', name: 'CHEETOS FLAMIN’ HOT', note: 'Para quien quiere picante.', color: 'flamin', price: 30 },
   { id: 'takis', name: 'TAKIS', note: 'Chile y limón al frente.', color: 'lime', price: 35 },
   { id: 'tostitos', name: 'TOSTITOS', note: 'El clásico para llenar bien.', color: 'toast', price: 35 },
+];
+
+const emptyCartMessages = [
+  'Tu carrito está más vacío que tus ganas de cocinar.',
+  'No te vayas así… el carbón ya se ilusionó.',
+  'Mirar el menú no llena el alma. Bueno, tampoco el estómago.',
+  'Hay un espacio vacío aquí. Igual que en tu corazón después de oler elote.',
+  'No dejes a Maicito hablando solo; el carbón no da terapia.',
+  'Tu antojo está en visto. Y el carrito también.',
+  'Puedes seguir fingiendo que no tienes hambre; el carrito no te cree.',
+  'Cero antojos, cero problemas… mentira, el hambre vuelve.',
+];
+const addedCartMessages = [
+  'Excelente. Una decisión menos cuestionable que muchas otras.',
+  'Tu antojo ya tiene futuro. A diferencia de algunos planes.',
+  'El carbón aprueba esta compra impulsiva.',
+  'Una compra impulsiva, pero con mejor destino que tus últimos mensajes.',
+  'Bien: ya hiciste algo útil con el día.',
+  'Tu pedido crece; tus pendientes pueden esperar cinco minutos.',
+  'Esto no arregla todo, pero sí arregla la cena.',
+  'Elote añadido. Crisis existencial pospuesta.',
+];
+const sendingMessages = [
+  'Maicito va en camino, porque tú ya hiciste suficiente por hoy.',
+  'Tu pedido salió disparado; nuestras responsabilidades no tanto.',
+  'Más rápido que el arrepentimiento después del primer bocado.',
+  'Va directo a WhatsApp, donde empieza la verdadera novela.',
+  'Cruza el internet con más ganas que tú cruzando por el elote.',
+  'Mensaje enviado: ahora solo falta que el universo no se meta.',
+  'Rápido, caliente y sin preguntar por tus decisiones.',
+  'Hacia WhatsApp, antes de que cambies de opinión.',
 ];
 
 const panelDetails: Array<{ key: MenuSectionType; nav: string; eyebrow: string; title: string; accent?: boolean }> = [
@@ -59,7 +90,7 @@ function businessStatus(now = new Date()): BusinessStatus {
   const afterEveningOpen = minutes >= 18 * 60 + 30 && day !== 'Sat';
   const afterMidnightOpen = minutes <= 30 && day !== 'Sun';
   const open = afterEveningOpen || afterMidnightOpen;
-  return { open, label: open ? 'ABIERTO AHORA · TOMAMOS PEDIDOS' : 'CERRADO AHORA · DOM–VIE 6:30 P. M. — 12:30 A. M.' };
+  return { open, isSaturday: day === 'Sat', label: open ? 'ABIERTO AHORA · TOMAMOS PEDIDOS' : 'CERRADO AHORA · DOM–VIE 6:30 P. M. — 12:30 A. M.' };
 }
 
 function deliveryPolicy(total: number): DeliveryPolicy {
@@ -71,6 +102,14 @@ function deliveryPolicy(total: number): DeliveryPolicy {
 
 function orderReference() {
   return 'TRU-' + Date.now().toString(36).toUpperCase() + '-' + Math.floor(100 + Math.random() * 900);
+}
+
+function nextMaicitoMessage(key: string, messages: string[]) {
+  const last = window.sessionStorage.getItem(key);
+  const options = messages.filter((message) => message !== last);
+  const message = options[Math.floor(Math.random() * options.length)] ?? messages[0];
+  window.sessionStorage.setItem(key, message);
+  return message;
 }
 
 export default function MenuExperience() {
@@ -90,6 +129,9 @@ export default function MenuExperience() {
   const [customer, setCustomer] = useState<CustomerDetails>({ name: '', phone: '', address: '', references: '', exactLocation: '', payment: 'exact', changeFor: '' });
   const [status, setStatus] = useState<BusinessStatus | null>(null);
   const [reference, setReference] = useState('');
+  const [emptyCartMessage, setEmptyCartMessage] = useState(emptyCartMessages[0]);
+  const [addedCartMessage, setAddedCartMessage] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(sendingMessages[0]);
   const panelRail = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -121,6 +163,10 @@ export default function MenuExperience() {
     updateStatus();
     const timer = window.setInterval(updateStatus, 60000);
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    setEmptyCartMessage(nextMaicitoMessage('truchita-empty-cart-phrase', emptyCartMessages));
   }, []);
 
   const availableProducts = useMemo(() => menu.products.filter((product) => product.available !== false), [menu.products]);
@@ -175,6 +221,7 @@ export default function MenuExperience() {
       bagFilling: activeProduct.service === 'bag' ? bagFilling : undefined,
       preparation,
     }]);
+    setAddedCartMessage(nextMaicitoMessage('truchita-added-cart-phrase', addedCartMessages));
     setModal('cart');
   };
 
@@ -200,6 +247,7 @@ export default function MenuExperience() {
   const handleCheckout = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!isOpen) return;
+    setSendingMessage(nextMaicitoMessage('truchita-sending-phrase', sendingMessages));
     setModal('sending');
     window.setTimeout(() => window.location.assign(whatsappUrl()), 1150);
   };
@@ -209,13 +257,19 @@ export default function MenuExperience() {
     document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const openCart = () => {
+    if (!cart.length) setEmptyCartMessage(nextMaicitoMessage('truchita-empty-cart-phrase', emptyCartMessages));
+    setAddedCartMessage('');
+    setModal('cart');
+  };
+
   const currentIndex = String(activePanel + 1).padStart(2, '0') + ' / ' + String(panelDetails.length).padStart(2, '0');
 
   return <main className="menu-page">
     <header className="site-header menu-header">
       <a className="mini-logo" href="/" aria-label="Volver al inicio"><span>ESQUITES</span><strong>EL TRUCHITA</strong></a>
       <nav aria-label="Navegación principal"><a href="/">INICIO</a><a href="#menu">MENÚ</a><a href="#contacto">A DOMICILIO</a></nav>
-      <button className="header-order" type="button" onClick={() => setModal('cart')}>MI PEDIDO <i className={cart.length ? 'cart-dot active' : 'cart-dot'} /></button>
+      <button className="header-order" type="button" onClick={openCart}>MI PEDIDO <i className={cart.length ? 'cart-dot active' : 'cart-dot'} /></button>
     </header>
 
     <section className="menu menu-only" id="menu" aria-labelledby="menu-title">
@@ -243,19 +297,19 @@ export default function MenuExperience() {
         </section>)}
       </div>
 
-      <div className="menu-bottom-line"><span>¿YA SABES QUÉ SE TE ANTOJA?</span><button type="button" onClick={() => setModal('cart')}>VER MI PEDIDO <i className={cart.length ? 'cart-dot active' : 'cart-dot'} /></button></div>
+      <div className="menu-bottom-line"><span>¿YA SABES QUÉ SE TE ANTOJA?</span><button type="button" onClick={openCart}>VER MI PEDIDO <i className={cart.length ? 'cart-dot active' : 'cart-dot'} /></button></div>
     </section>
 
     <section className="contact" id="contacto"><div><p className="section-kicker">CUANDO EL ANTOJO PEGA</p><h2>SOLO A<br /><em>DOMICILIO.</em></h2></div><div className="contact-copy"><p>Entregamos en Zacapoaxtla, Puebla.</p><dl className="hours"><div><dt>DOMINGO A VIERNES</dt><dd>6:30 P. M. — 12:30 A. M.</dd></div><div><dt>SÁBADO</dt><dd>CERRADO</dd></div></dl><a href={'https://wa.me/' + WHATSAPP_BUSINESS_NUMBER} target="_blank" rel="noreferrer">PEDIR POR WHATSAPP <span>↗</span></a></div></section>
-    <footer><div className="mini-logo"><span>ESQUITES</span><strong>EL TRUCHITA</strong></div><p>SOLO A DOMICILIO · DOM–VIE 6:30 P. M. — 12:30 A. M.</p><button type="button" onClick={() => setModal('cart')}>MI PEDIDO <i className={cart.length ? 'cart-dot active' : 'cart-dot'} /></button></footer>
-    <button className="floating-order" type="button" onClick={() => setModal('cart')} aria-label="Abrir mi pedido"><span>MI PEDIDO</span><strong>{cart.length || '0'}</strong><i className={cart.length ? 'cart-dot active' : 'cart-dot'} /></button>
+    <footer><div className="mini-logo"><span>ESQUITES</span><strong>EL TRUCHITA</strong></div><p>SOLO A DOMICILIO · DOM–VIE 6:30 P. M. — 12:30 A. M.</p><button type="button" onClick={openCart}>MI PEDIDO <i className={cart.length ? 'cart-dot active' : 'cart-dot'} /></button></footer>
+    <button className="floating-order" type="button" onClick={openCart} aria-label="Abrir mi pedido"><span>MI PEDIDO</span><strong>{cart.length || '0'}</strong><i className={cart.length ? 'cart-dot active' : 'cart-dot'} /></button>
 
     {modal !== 'none' && <div className="modal-backdrop" onMouseDown={() => modal !== 'sending' && setModal('none')}><section className={'order-modal ' + modal} role="dialog" aria-modal="true" aria-label="Mi pedido" onMouseDown={(event) => event.stopPropagation()}>
       {modal !== 'sending' && <button className="close-modal" type="button" onClick={() => setModal('none')} aria-label="Cerrar">×</button>}
       {modal === 'customize' && activeProduct && <Customizer activeProduct={activeProduct} activeBasePrice={activeBasePrice} activePrice={activePrice} preparation={preparation} mayo={mayo} queso={queso} setMayo={setMayo} setQueso={setQueso} snackFlavor={snackFlavor} setSnackFlavor={setSnackFlavor} bagFilling={bagFilling} setBagFilling={setBagFilling} bagFillings={bagFillings} availableExtras={availableExtras} selectedExtraIds={selectedExtraIds} toggleExtra={toggleExtra} note={note} setNote={setNote} onAdd={addToCart} />}
-      {modal === 'cart' && <CartView cart={cart} total={total} isOpen={isOpen} statusLabel={status?.label} onRemove={(id) => setCart((items) => items.filter((item) => item.id !== id))} onEmpty={() => { setCart([]); setReference(''); }} onContinue={closeCartToMenu} onCheckout={() => { if (!isOpen) return; setReference((current) => current || orderReference()); setModal('checkout'); }} />}
+      {modal === 'cart' && <CartView cart={cart} total={total} isOpen={isOpen} isSaturday={status?.isSaturday} statusLabel={status?.label} emptyMessage={emptyCartMessage} addedMessage={addedCartMessage} onRemove={(id) => setCart((items) => items.filter((item) => item.id !== id))} onEmpty={() => { setCart([]); setReference(''); setAddedCartMessage(''); setEmptyCartMessage(nextMaicitoMessage('truchita-empty-cart-phrase', emptyCartMessages)); }} onContinue={closeCartToMenu} onCheckout={() => { if (!isOpen) return; setReference((current) => current || orderReference()); setModal('checkout'); }} />}
       {modal === 'checkout' && <CheckoutForm customer={customer} setCustomer={setCustomer} total={total} reference={reference} isOpen={isOpen} statusLabel={status?.label} onSubmit={handleCheckout} onBack={() => setModal('cart')} />}
-      {modal === 'sending' && <div className="sending-state"><div className="corn-flight" aria-hidden="true"><img src="/maicito-truchita.png" alt="" /><i>✦</i><i>✦</i><i>✦</i></div><p className="modal-kicker">PREPARANDO TU MENSAJE</p><h2>¡VA VOLANDO<br />A WHATSAPP!</h2><p>Un momento, ya llevamos tu pedido.</p></div>}
+      {modal === 'sending' && <div className="sending-state"><div className="corn-flight" aria-hidden="true"><img src="/maicito-truchita.png" alt="" /><i>✦</i><i>✦</i><i>✦</i></div><p className="modal-kicker">PREPARANDO TU MENSAJE</p><h2>¡VA VOLANDO<br />A WHATSAPP!</h2><p>{sendingMessage}</p></div>}
     </section></div>}
   </main>;
 }
@@ -275,13 +329,13 @@ function ToggleRow({ kind, title, description, checked, disabled, onChange }: { 
   return <label className={disabled ? 'switch-row switch-row-visual disabled' : 'switch-row switch-row-visual'}><span className="switch-option-copy"><IngredientReference kind={kind} /><span><b>{title}</b><small>{description}</small></span></span><input disabled={disabled} type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /><i /></label>;
 }
 
-function Maicito({ mood = 'happy', caption }: { mood?: 'happy' | 'sleepy'; caption?: string }) {
-  return <figure className={'maicito maicito-' + mood} aria-hidden="true"><img src="/maicito-truchita.png" alt="" />{caption && <figcaption>{caption}</figcaption>}</figure>;
+function Maicito({ mood = 'happy', caption }: { mood?: 'happy' | 'sleepy' | 'sad'; caption?: string }) {
+  return <figure className={'maicito maicito-' + mood} aria-hidden="true"><img src={mood === 'sad' ? '/maicito-truchita-triste.png' : '/maicito-truchita.png'} alt="" />{caption && <figcaption>{caption}</figcaption>}</figure>;
 }
 
-function CartView({ cart, total, isOpen, statusLabel, onRemove, onEmpty, onContinue, onCheckout }: { cart: CartItem[]; total: number; isOpen: boolean; statusLabel?: string; onRemove: (id: string) => void; onEmpty: () => void; onContinue: () => void; onCheckout: () => void }) {
+function CartView({ cart, total, isOpen, isSaturday, statusLabel, emptyMessage, addedMessage, onRemove, onEmpty, onContinue, onCheckout }: { cart: CartItem[]; total: number; isOpen: boolean; isSaturday?: boolean; statusLabel?: string; emptyMessage: string; addedMessage: string; onRemove: (id: string) => void; onEmpty: () => void; onContinue: () => void; onCheckout: () => void }) {
   const delivery = deliveryPolicy(total);
-  return <><p className="modal-kicker">ESTO ES LO QUE SE VA A LA BRASA</p><h2>MI PEDIDO <span className="cart-count">{cart.length}</span></h2>{cart.length === 0 ? <div className="empty-cart"><Maicito caption="¿SE TE ANTOJA ALGO?" /><p>Aún no hay antojos aquí.</p><button type="button" onClick={onContinue}>VER EL MENÚ</button></div> : <><div className="cart-list">{cart.map((item) => <article className="cart-item" key={item.id}><div><h3>{item.product.name}</h3><p>{item.preparation === 'muy-mexicano' ? '100% al carbón · ' : ''}{item.snackFlavor ? item.snackFlavor.name + ' · ' : ''}{item.bagFilling ? 'Con ' + item.bagFilling.name + ' · ' : ''}{item.mayo ? 'Con mayo' : 'Sin mayo'} · {item.queso ? 'Con queso' : 'Sin queso'} · {item.extras.length ? item.extras.map((extra) => extra.name).join(', ') : 'Sin extras'}{item.note ? ' · “' + item.note + '”' : ''}</p></div><b>{money(cartItemTotal(item))}</b><button type="button" onClick={() => onRemove(item.id)} aria-label={'Eliminar ' + item.product.name}>×</button></article>)}</div><div className="cart-total"><span>SUBTOTAL</span><strong>{money(total)}</strong></div><aside className="delivery-summary"><p>{delivery.title}</p><span>{delivery.detail}</span></aside>{!isOpen && <aside className="closed-notice"><Maicito mood="sleepy" /><div><p>{statusLabel ?? 'CERRADO AHORA'}</p><span>Puedes guardar tu antojo, pero los pedidos se habilitan durante nuestro horario de atención.</span></div></aside>}<div className="cart-actions"><button type="button" className="secondary-action" onClick={onContinue}>SEGUIR ORDENANDO</button><button type="button" className="empty-button" onClick={onEmpty}>VACIAR SELECCIÓN</button></div><button className="wide-action" type="button" disabled={!isOpen} onClick={onCheckout}>{isOpen ? 'REALIZAR PEDIDO' : 'PEDIDOS CERRADOS'} <span>→</span></button></>}</>;
+  return <><p className="modal-kicker">ESTO ES LO QUE SE VA A LA BRASA</p><h2>MI PEDIDO <span className="cart-count">{cart.length}</span></h2>{cart.length === 0 ? <div className="empty-cart"><Maicito /><p>{emptyMessage}</p><button type="button" onClick={onContinue}>VER EL MENÚ</button></div> : <><div className="cart-list">{cart.map((item) => <article className="cart-item" key={item.id}><div><h3>{item.product.name}</h3><p>{item.preparation === 'muy-mexicano' ? '100% al carbón · ' : ''}{item.snackFlavor ? item.snackFlavor.name + ' · ' : ''}{item.bagFilling ? 'Con ' + item.bagFilling.name + ' · ' : ''}{item.mayo ? 'Con mayo' : 'Sin mayo'} · {item.queso ? 'Con queso' : 'Sin queso'} · {item.extras.length ? item.extras.map((extra) => extra.name).join(', ') : 'Sin extras'}{item.note ? ' · “' + item.note + '”' : ''}</p></div><b>{money(cartItemTotal(item))}</b><button type="button" onClick={() => onRemove(item.id)} aria-label={'Eliminar ' + item.product.name}>×</button></article>)}</div><div className="cart-total"><span>SUBTOTAL</span><strong>{money(total)}</strong></div><aside className="delivery-summary"><p>{delivery.title}</p><span>{delivery.detail}</span></aside>{addedMessage && <aside className="cart-added-message" role="status"><Maicito /><p>{addedMessage}</p></aside>}{!isOpen && <aside className="closed-notice"><Maicito mood={isSaturday ? 'sad' : 'sleepy'} /><div><p>{statusLabel ?? 'CERRADO AHORA'}</p><span>{isSaturday ? 'Te extraño, pronto nos veremos. Hoy me tocó sobrevivir a la uni.' : 'Puedes guardar tu antojo, pero los pedidos se habilitan durante nuestro horario de atención.'}</span></div></aside>}<div className="cart-actions"><button type="button" className="secondary-action" onClick={onContinue}>SEGUIR ORDENANDO</button><button type="button" className="empty-button" onClick={onEmpty}>VACIAR SELECCIÓN</button></div><button className="wide-action" type="button" disabled={!isOpen} onClick={onCheckout}>{isOpen ? 'REALIZAR PEDIDO' : 'PEDIDOS CERRADOS'} <span>→</span></button></>}</>;
 }
 
 function CheckoutForm({ customer, setCustomer, total, reference, isOpen, statusLabel, onSubmit, onBack }: { customer: CustomerDetails; setCustomer: (value: CustomerDetails) => void; total: number; reference: string; isOpen: boolean; statusLabel?: string; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onBack: () => void }) {
