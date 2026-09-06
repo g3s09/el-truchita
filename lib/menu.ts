@@ -49,7 +49,7 @@ export const defaultMenu: MenuData = {
     { id: 'clasico', section: 'traditional', name: 'EL CLÁSICO', price: 70, description: 'Elote asado al carbón, mayonesa, queso, limón y chile.', image: traditionalImages.clasico, hasIngredients: false, service: 'cup' },
     { id: 'tocino', section: 'traditional', name: 'CON TOCINO', price: 80, description: 'Elote al carbón con tocino, limón y chile.', image: traditionalImages.tocino, hasIngredients: true, service: 'cup' },
     { id: 'salchicha', section: 'traditional', name: 'CON SALCHICHA', price: 80, description: 'Elote al carbón con salchicha, limón y chile.', image: traditionalImages.salchicha, hasIngredients: true, service: 'cup' },
-    { id: 'tocino-salchicha', section: 'traditional', name: 'EL VORAZ', price: 85, description: 'Elote al carbón con tocino doradito, salchicha, mayonesa, queso, limón y chile.', image: traditionalImages['tocino-salchicha'], hasIngredients: true, service: 'cup' },
+    { id: 'tocino-salchicha', section: 'traditional', name: 'EL VORAZ', price: 115, description: 'La combinación completa de los clásicos: elote al carbón, tocino doradito, salchicha, mezcla de quesos, mayonesa, limón, chile y el antojo bien servido.', image: traditionalImages['tocino-salchicha'], hasIngredients: true, service: 'cup' },
     { id: 'tocino-queso', section: 'traditional', name: 'TOCINO + QUESO ESPECIAL', price: 95, description: 'Tocino y mezcla de queso manchego/hebra.', image: traditionalImages['tocino-queso'], hasIngredients: true, service: 'cup' },
     { id: 'salchicha-queso', section: 'traditional', name: 'SALCHICHA + QUESO ESPECIAL', price: 95, description: 'Salchicha y mezcla de queso manchego/hebra.', image: traditionalImages['salchicha-queso'], hasIngredients: true, service: 'cup' },
     { id: 'tatemado', section: 'specialty', name: 'EL TATEMADO', price: 125, description: 'Poblano tatemado, cebolla asada, jalapeño asado, chorizo dorado y queso especial.', tag: 'FUEGO', image: productImage, hasIngredients: true, service: 'cup' },
@@ -58,8 +58,11 @@ export const defaultMenu: MenuData = {
     { id: 'poblano', section: 'specialty', name: 'EL POBLANO', price: 155, description: 'Rajas de poblano tatemado, champiñones dorados, queso fundido y cebolla.', tag: 'DE LA CASA', image: productImage, hasIngredients: true, service: 'cup' },
     { id: 'alambre', section: 'specialty', name: 'EL ALAMBRE', price: 165, description: 'Carne asada, tocino, poblano tatemado, cebolla y quesos fundidos.', tag: 'CASA', image: productImage, hasIngredients: true, service: 'cup' },
     { id: 'truchita', section: 'specialty', name: 'EL TRUCHITA', price: 170, description: 'Carne asada, chorizo, tocino, poblano tatemado, cebolla asada, quesos y limón.', tag: 'ESPECIALIDAD DE LA CASA', image: productImage, hasIngredients: true, service: 'cup' },
-    { id: 'elote-clasico', section: 'elotes', name: 'ELOTE CLÁSICO', price: 45, description: 'Elote entero asado al carbón, con mayonesa, queso, limón y chile.', image: cornImage, hasIngredients: false, service: 'corn' },
-    { id: 'elote-con-todo', section: 'elotes', name: 'ELOTE CON TODO', price: 60, description: 'Elote entero al carbón con queso, mayonesa, limón, chile y un toque de la casa.', tag: 'AL CARBÓN', image: cornImage, hasIngredients: true, service: 'corn' },
+    { id: 'elote-clasico', section: 'elotes', name: 'ELOTE CLÁSICO', price: 45, description: 'Elote entero natural, asado al carbón. Mayonesa y queso opcionales, como tú lo prefieras.', image: cornImage, hasIngredients: false, service: 'corn' },
+    { id: 'elote-un-picante', section: 'elotes', name: 'ELOTE · 1 PICANTE', price: 50, description: 'Elote entero al carbón con mayonesa y queso opcionales. Elige un picante para acompañarlo.', image: cornImage, hasIngredients: false, service: 'corn' },
+    { id: 'elote-dos-picantes', section: 'elotes', name: 'ELOTE · 2 PICANTES', price: 55, description: 'Elote entero al carbón con mayonesa y queso opcionales. Tú eliges exactamente dos picantes.', image: cornImage, hasIngredients: false, service: 'corn' },
+    { id: 'elote-tres-picantes', section: 'elotes', name: 'ELOTE · 3 PICANTES', price: 60, description: 'Elote entero al carbón con mayonesa y queso opcionales. Tú eliges exactamente tres picantes.', image: cornImage, hasIngredients: false, service: 'corn' },
+    { id: 'elote-con-todo', section: 'elotes', name: 'ELOTE CON TODO', price: 65, description: 'Elote entero al carbón con mayonesa y queso opcionales, más pepita con chiltepín, cacahuate con ajonjolí y chiltepín, Cheetos Flamin’ Hot y Doritos Fuego.', tag: 'TODOS LOS PICANTES', image: cornImage, hasIngredients: true, service: 'corn' },
     { id: 'esquite-en-bolsa', section: 'bolsa', name: 'UN GUSTITO MÁS', price: 105, description: 'Tu botana favorita abierta y rellena con el esquite clásico o especial que tú elijas.', tag: 'EL ANTOJO COMPLETO', image: bagImage, hasIngredients: true, service: 'bag' },
   ],
   extras: [
@@ -113,11 +116,13 @@ export function normalizeMenu(menu: MenuData): MenuData {
     const catalogProduct = defaultsById.get(product.id);
     const useTrayImage = Boolean(catalogProduct && product.service === 'cup' && legacyCupImages.has(product.image));
     const isSpecialty = product.section === 'specialty' && product.description.toLowerCase().includes('salsa');
+    const isLegacyClassicCorn = product.id === 'elote-clasico' && product.description === 'Elote entero asado al carbón, con mayonesa, queso, limón y chile.';
     return {
       ...product,
       image: useTrayImage && catalogProduct ? catalogProduct.image : product.image,
-      name: product.id === 'tocino-salchicha' && catalogProduct ? catalogProduct.name : product.name,
-      description: (isSpecialty || product.id === 'tocino-salchicha') && catalogProduct ? catalogProduct.description : product.description,
+      name: (product.id === 'tocino-salchicha' || product.id === 'elote-con-todo') && catalogProduct ? catalogProduct.name : product.name,
+      price: (product.id === 'tocino-salchicha' || (product.id === 'elote-con-todo' && product.price === 60)) && catalogProduct ? catalogProduct.price : product.price,
+      description: (isSpecialty || isLegacyClassicCorn || product.id === 'tocino-salchicha' || product.id === 'elote-con-todo') && catalogProduct ? catalogProduct.description : product.description,
       available: product.available !== false,
     };
   });

@@ -116,29 +116,29 @@ export default function Home() {
           <p className="hero-detail">
             Elote asado al carbón, desgranado y preparado al momento.
           </p>
-          <aside
-            className={
-              isSaturday ? "hero-maicito-free is-sad" : "hero-maicito-free"
-            }
-            aria-live="polite"
-          >
-            <p>{isSaturday ? saturdayMessage : maicitoMessage}</p>
-            <img
-              src={
-                isSaturday
-                  ? "/maicito-truchita-sad-free.png"
-                  : "/maicito-truchita-free.png"
-              }
-              alt=""
-            />
-            <i aria-hidden="true">✦</i><i aria-hidden="true">✦</i>
-          </aside>
           <div className="hero-actions">
             <a className="button button-fire" href="/menu" onClick={openMenu}>
               VER MENÚ <span>↓</span>
             </a>
           </div>
         </div>
+        <aside
+          className={
+            isSaturday ? "hero-maicito-free is-sad" : "hero-maicito-free"
+          }
+          aria-live="polite"
+        >
+          <p>{isSaturday ? saturdayMessage : maicitoMessage}</p>
+          <img
+            src={
+              isSaturday
+                ? "/maicito-truchita-sad-free.png"
+                : "/maicito-truchita-free.png"
+            }
+            alt=""
+          />
+          <i aria-hidden="true">✦</i><i aria-hidden="true">✦</i>
+        </aside>
         <aside className="future-space" id="domicilio">
           <p>PRÓXIMAMENTE</p>
           <strong>UN RINCÓN PARA DISFRUTARLO CON CALMA.</strong>

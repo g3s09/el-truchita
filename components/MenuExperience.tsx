@@ -33,6 +33,7 @@ type CartItem = {
   extras: ExtraOption[];
   note: string;
   spice?: SpiceOption;
+  spices?: SpiceOption[];
   snackFlavor?: SnackFlavor;
   bagFilling?: Product;
   preparation: Preparation;
@@ -53,6 +54,7 @@ type DeliveryPolicy = { title: string; detail: string; whatsapp: string };
 
 const WHATSAPP_BUSINESS_NUMBER = "522204419169";
 const CART_STORAGE_KEY = "el-truchita-cart-v1";
+const SOUND_STORAGE_KEY = "el-truchita-sound-preference";
 const money = (amount: number) => "$" + amount;
 const snackFlavors: SnackFlavor[] = [
   {
@@ -123,6 +125,15 @@ const spiceOptions: SpiceOption[] = [
     color: "fuego",
   },
 ];
+const spicyOptions = spiceOptions.filter((option) => option.id !== "sin-picante");
+const cornSpiceLimit = (product?: Product) => {
+  if (product?.service !== "corn") return 0;
+  if (product.id === "elote-un-picante") return 1;
+  if (product.id === "elote-dos-picantes") return 2;
+  if (product.id === "elote-tres-picantes") return 3;
+  if (product.id === "elote-con-todo") return spicyOptions.length;
+  return 0;
+};
 
 const emptyCartMessages = [
   "Tu carrito está más vacío que tus ganas de cocinar.",
@@ -153,6 +164,10 @@ const sendingMessages = [
   "Mensaje enviado: ahora solo falta que el universo no se meta.",
   "Rápido, caliente y sin preguntar por tus decisiones.",
   "Hacia WhatsApp, antes de que cambies de opinión.",
+  "No te lo goces a solas: mándale la página a quien siempre termina robando cucharadas.",
+  "Comparte el antojo; es más sano que compartir indirectas y mucho más rico.",
+  "Tu pedido va a WhatsApp. Tu amistad que dijo «no tengo hambre» ya debería ir enterándose.",
+  "Elote enviado. Si lo compartes, Maicito no tendrá que fingir que no le dolió.",
 ];
 
 const panelDetails: Array<{
@@ -347,6 +362,7 @@ export default function MenuExperience() {
   const [queso, setQueso] = useState(true);
   const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
   const [spice, setSpice] = useState<SpiceOption>(spiceOptions[0]);
+  const [selectedSpiceIds, setSelectedSpiceIds] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [snackFlavor, setSnackFlavor] = useState<SnackFlavor>(snackFlavors[0]);
   const [bagFilling, setBagFilling] = useState<Product | undefined>();
@@ -369,7 +385,8 @@ export default function MenuExperience() {
   const [sendingMessage, setSendingMessage] = useState(sendingMessages[0]);
   const [maicitoAction, setMaicitoAction] = useState<MaicitoAction>("idle");
   const [showCompanion, setShowCompanion] = useState(true);
-  const [soundOn, setSoundOn] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const [soundPreferenceLoaded, setSoundPreferenceLoaded] = useState(false);
   const panelRail = useRef<HTMLDivElement>(null);
   const maicitoTimer = useRef<number | undefined>(undefined);
   const audioContext = useRef<AudioContext | null>(null);
@@ -397,6 +414,16 @@ export default function MenuExperience() {
       setCartLoaded(true);
     }
   }, []);
+
+  useEffect(() => {
+    setSoundOn(localStorage.getItem(SOUND_STORAGE_KEY) !== "off");
+    setSoundPreferenceLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!soundPreferenceLoaded) return;
+    localStorage.setItem(SOUND_STORAGE_KEY, soundOn ? "on" : "off");
+  }, [soundOn, soundPreferenceLoaded]);
 
   useEffect(() => {
     if (!cartLoaded) return;
@@ -472,6 +499,10 @@ export default function MenuExperience() {
       availableExtras.filter((option) => selectedExtraIds.includes(option.id)),
     [availableExtras, selectedExtraIds],
   );
+  const selectedCornSpices = useMemo(
+    () => spicyOptions.filter((option) => selectedSpiceIds.includes(option.id)),
+    [selectedSpiceIds],
+  );
   const activeBasePrice = useMemo(
     () =>
       activeProduct
@@ -519,11 +550,11 @@ export default function MenuExperience() {
       oscillator.frequency.setValueAtTime(notes[0], now);
       oscillator.frequency.exponentialRampToValueAtTime(notes[1], now + 0.12);
       gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.045, now + 0.012);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+      gain.gain.exponentialRampToValueAtTime(0.085, now + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
       oscillator.connect(gain).connect(context.destination);
       oscillator.start(now);
-      oscillator.stop(now + 0.17);
+      oscillator.stop(now + 0.21);
     } catch {
       // El sonido es opcional; el pedido nunca depende del audio.
     }
@@ -537,20 +568,33 @@ export default function MenuExperience() {
 
   useEffect(() => {
     setCart((items) =>
-      items.filter((item) => {
+      items.flatMap((item) => {
         const currentProduct = menu.products.find(
           (product) => product.id === item.product.id,
         );
         const currentFilling = item.bagFilling
           ? menu.products.find((product) => product.id === item.bagFilling?.id)
           : undefined;
-        return (
-          currentProduct?.available !== false &&
-          currentProduct !== undefined &&
-          (!item.bagFilling ||
-            (currentFilling !== undefined &&
-              currentFilling.available !== false))
-        );
+        if (
+          currentProduct?.available === false ||
+          currentProduct === undefined ||
+          (item.bagFilling &&
+            (currentFilling === undefined || currentFilling.available === false))
+        )
+          return [];
+        return [
+          {
+            ...item,
+            product: currentProduct,
+            bagFilling: currentFilling ?? item.bagFilling,
+            spice:
+              currentProduct.id === "elote-con-todo" ? undefined : item.spice,
+            spices:
+              currentProduct.id === "elote-con-todo"
+                ? spicyOptions
+                : item.spices,
+          },
+        ];
       }),
     );
   }, [menu.products]);
@@ -563,6 +607,11 @@ export default function MenuExperience() {
     setQueso(true);
     setSelectedExtraIds([]);
     setSpice(spiceOptions[0]);
+    setSelectedSpiceIds(
+      product.id === "elote-con-todo"
+        ? spicyOptions.map((option) => option.id)
+        : [],
+    );
     setSnackFlavor(options.snackFlavor ?? snackFlavors[0]);
     setBagFilling(options.bagFilling ?? bagFillings[0]);
     setPreparation(options.preparation ?? "standard");
@@ -605,8 +654,20 @@ export default function MenuExperience() {
         : [...current, id],
     );
 
+  const toggleCornSpice = (id: string) => {
+    const limit = cornSpiceLimit(activeProduct);
+    if (!limit || activeProduct?.id === "elote-con-todo") return;
+    setSelectedSpiceIds((current) => {
+      if (current.includes(id)) return current.filter((item) => item !== id);
+      if (current.length >= limit) return current;
+      return [...current, id];
+    });
+  };
+
   const addToCart = () => {
     if (!activeProduct) return;
+    const spiceLimit = cornSpiceLimit(activeProduct);
+    if (spiceLimit && selectedCornSpices.length !== spiceLimit) return;
     playSound("add");
     triggerMaicito("celebrate");
     setCart((items) => [
@@ -618,7 +679,14 @@ export default function MenuExperience() {
         queso,
         extras: selectedExtras,
         note: note.trim(),
-        spice: spice.id === "sin-picante" ? undefined : spice,
+        spice:
+          activeProduct.service === "corn" || spice.id === "sin-picante"
+            ? undefined
+            : spice,
+        spices:
+          activeProduct.service === "corn" && selectedCornSpices.length
+            ? selectedCornSpices
+            : undefined,
         snackFlavor: activeProduct.service === "bag" ? snackFlavor : undefined,
         bagFilling: activeProduct.service === "bag" ? bagFilling : undefined,
         preparation,
@@ -641,7 +709,11 @@ export default function MenuExperience() {
           item.bagFilling ? "Esquite dentro: " + item.bagFilling.name : "",
           "Mayonesa: " + (item.mayo ? "sí" : "no"),
           "Queso: " + (item.queso ? "sí" : "no"),
-          item.spice ? "Picante: " + item.spice.name : "Sin picante extra",
+          item.spices?.length
+            ? "Picantes: " + item.spices.map((option) => option.name).join(", ")
+            : item.spice
+              ? "Picante: " + item.spice.name
+              : "Sin picante extra",
           item.extras.length
             ? "Extras: " + item.extras.map((extra) => extra.name).join(", ")
             : "Sin extras",
@@ -952,7 +1024,17 @@ export default function MenuExperience() {
           </h2>
         </div>
         <div className="contact-copy">
-          <p>Entregamos en Zacapoaxtla, Puebla.</p>
+          <p>
+            Entregamos en Zacapoaxtla centro, Xalacapan, Comaltepec, San
+            Francisco y zonas cercanas.
+          </p>
+          <aside className="delivery-zone">
+            <strong>REPARTIMOS CERQUITA PARA QUE LLEGUE BIEN CALIENTE.</strong>
+            <span>
+              Por ahora atendemos Zacapoaxtla y alrededores; la distancia se
+              confirma antes de preparar.
+            </span>
+          </aside>
           <dl className="hours">
             <div>
               <dt>DOMINGO A VIERNES</dt>
@@ -963,13 +1045,17 @@ export default function MenuExperience() {
               <dd>CERRADO</dd>
             </div>
           </dl>
-          <a
-            href={"https://wa.me/" + WHATSAPP_BUSINESS_NUMBER}
-            target="_blank"
-            rel="noreferrer"
-          >
-            PEDIR POR WHATSAPP <span>↗</span>
-          </a>
+          <aside className="share-promo">
+            <p>RETO DEL ANTOJO</p>
+            <strong>
+              Comparte una captura de nuestra página o tu preparación con 10
+              amigos en redes y envíanos la evidencia por WhatsApp.
+            </strong>
+            <span>
+              Podrás ser acreedor a un esquite clásico con un ingrediente a tu
+              gusto. No esperes más.
+            </span>
+          </aside>
         </div>
       </section>
       <footer>
@@ -1025,6 +1111,9 @@ export default function MenuExperience() {
                 setQueso={setQueso}
                 spice={spice}
                 setSpice={setSpice}
+                selectedSpiceIds={selectedSpiceIds}
+                selectedCornSpices={selectedCornSpices}
+                toggleCornSpice={toggleCornSpice}
                 snackFlavor={snackFlavor}
                 setSnackFlavor={setSnackFlavor}
                 bagFilling={bagFilling}
@@ -1120,6 +1209,9 @@ function Customizer({
   setQueso,
   spice,
   setSpice,
+  selectedSpiceIds,
+  selectedCornSpices,
+  toggleCornSpice,
   snackFlavor,
   setSnackFlavor,
   bagFilling,
@@ -1142,6 +1234,9 @@ function Customizer({
   setQueso: (value: boolean) => void;
   spice: SpiceOption;
   setSpice: (value: SpiceOption) => void;
+  selectedSpiceIds: string[];
+  selectedCornSpices: SpiceOption[];
+  toggleCornSpice: (id: string) => void;
   snackFlavor: SnackFlavor;
   setSnackFlavor: (value: SnackFlavor) => void;
   bagFilling?: Product;
@@ -1155,10 +1250,17 @@ function Customizer({
   onAdd: () => void;
 }) {
   const carbonOnly = preparation === "muy-mexicano";
+  const cornSpiceSlots = cornSpiceLimit(activeProduct);
+  const isCorn = activeProduct.service === "corn";
+  const cornSpicesComplete =
+    !cornSpiceSlots || selectedCornSpices.length === cornSpiceSlots;
+  const chosenSpiceCount = isCorn
+    ? selectedCornSpices.length
+    : Number(spice.id !== "sin-picante");
   const selectedCount =
     Number(mayo) +
     Number(queso) +
-    Number(spice.id !== "sin-picante") +
+    chosenSpiceCount +
     selectedExtraIds.length;
   const previewClass =
     "tray-preview" +
@@ -1318,30 +1420,82 @@ function Customizer({
           disabled={false}
           onChange={setQueso}
         />
-        <fieldset className="spice-customizer">
-          <legend>ELIGE TU PICANTE</legend>
-          <p>Va sobre tu preparación y no cambia el precio.</p>
-          <div>
-            {spiceOptions.map((option) => (
-              <label
-                className={spice.id === option.id ? "selected" : ""}
-                key={option.id}
-              >
-                <input
-                  type="radio"
-                  name="spice"
-                  checked={spice.id === option.id}
-                  onChange={() => setSpice(option)}
-                />
-                <i className={"spice-mark spice-" + option.color} />
-                <span>
-                  <b>{option.name}</b>
-                  <small>{option.note}</small>
-                </span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        {isCorn ? (
+          <fieldset className="spice-customizer corn-spice-customizer">
+            <legend>
+              {cornSpiceSlots
+                ? activeProduct.id === "elote-con-todo"
+                  ? "LLEVA TODOS LOS PICANTES"
+                  : "ELIGE " + cornSpiceSlots + " PICANTE" + (cornSpiceSlots > 1 ? "S" : "")
+                : "VERSIÓN NATURAL"}
+            </legend>
+            <p>
+              {cornSpiceSlots
+                ? activeProduct.id === "elote-con-todo"
+                  ? "Esta preparación ya incluye las cuatro opciones de la casa."
+                  : "Tú eliges " + cornSpiceSlots + ". " + selectedCornSpices.length + " de " + cornSpiceSlots + " seleccionados."
+                : "Va natural, recién salido del carbón. La mayonesa y el queso son opcionales."}
+            </p>
+            {cornSpiceSlots > 0 && (
+              <div>
+                {spicyOptions.map((option) => {
+                  const selected = selectedSpiceIds.includes(option.id);
+                  const disabled =
+                    activeProduct.id === "elote-con-todo" ||
+                    (!selected && selectedCornSpices.length >= cornSpiceSlots);
+                  return (
+                    <label
+                      className={selected ? "selected" : ""}
+                      key={option.id}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        disabled={disabled}
+                        onChange={() => toggleCornSpice(option.id)}
+                      />
+                      <i className={"spice-mark spice-" + option.color} />
+                      <span>
+                        <b>{option.name}</b>
+                        <small>{option.note}</small>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+            {cornSpiceSlots > 0 && !cornSpicesComplete && (
+              <strong className="spice-required" role="status">
+                ELIGE {cornSpiceSlots - selectedCornSpices.length} MÁS PARA CONTINUAR
+              </strong>
+            )}
+          </fieldset>
+        ) : (
+          <fieldset className="spice-customizer">
+            <legend>ELIGE TU PICANTE</legend>
+            <p>Va sobre tu preparación y no cambia el precio.</p>
+            <div>
+              {spiceOptions.map((option) => (
+                <label
+                  className={spice.id === option.id ? "selected" : ""}
+                  key={option.id}
+                >
+                  <input
+                    type="radio"
+                    name="spice"
+                    checked={spice.id === option.id}
+                    onChange={() => setSpice(option)}
+                  />
+                  <i className={"spice-mark spice-" + option.color} />
+                  <span>
+                    <b>{option.name}</b>
+                    <small>{option.note}</small>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
         <fieldset>
           <legend>
             {activeProduct.service === "corn"
@@ -1391,7 +1545,12 @@ function Customizer({
           />
         </label>
       </div>
-      <button className="wide-action arcade-add" type="button" onClick={onAdd}>
+      <button
+        className="wide-action arcade-add"
+        type="button"
+        disabled={!cornSpicesComplete}
+        onClick={onAdd}
+      >
         AGREGAR A MI PEDIDO <span>{money(activePrice)}</span>
       </button>
     </>
@@ -1526,7 +1685,13 @@ function CartView({
                       : ""}
                     {item.mayo ? "Con mayo" : "Sin mayo"} ·{" "}
                     {item.queso ? "Con queso" : "Sin queso"} ·{" "}
-                    {item.spice ? "Picante: " + item.spice.name + " · " : ""}
+                    {item.spices?.length
+                      ? "Picantes: " +
+                        item.spices.map((option) => option.name).join(", ") +
+                        " · "
+                      : item.spice
+                        ? "Picante: " + item.spice.name + " · "
+                        : ""}
                     {item.extras.length
                       ? item.extras.map((extra) => extra.name).join(", ")
                       : "Sin extras"}
@@ -1715,7 +1880,9 @@ function CheckoutForm({
             placeholder="10 dígitos"
           />
         </label>
-        <div className="delivery-only">ENTREGA A DOMICILIO</div>
+        <div className="delivery-only">
+          ENTREGA A DOMICILIO · ZACAPOAXTLA Y ALREDEDORES
+        </div>
         <label>
           <span>DIRECCIÓN</span>
           <input
@@ -1813,9 +1980,10 @@ function CheckoutForm({
         <p>{delivery.title}</p>
         <strong>{delivery.detail}</strong>
         <span>
-          La dirección se valida antes de preparar. El tiempo puede variar por
-          tu pedido, la disponibilidad del repartidor y contratiempos en el
-          camino.
+          Zona: Zacapoaxtla centro, Xalacapan, Comaltepec, San Francisco y
+          alrededores. La dirección se valida antes de preparar; el tiempo
+          puede variar por tu pedido, la disponibilidad del repartidor y
+          contratiempos en el camino.
         </span>
       </aside>
       <aside className="privacy-note">
@@ -1832,6 +2000,18 @@ function CheckoutForm({
         </strong>
         <span>
           Gracias por tu preferencia. En breve te responderemos por WhatsApp.
+        </span>
+      </aside>
+      <aside className="checkout-share-note">
+        <p>NO TE LO GOZES A SOLAS</p>
+        <strong>
+          Comparte esta página con esa amistad que siempre dice “no tengo
+          hambre” y termina robando cucharadas.
+        </strong>
+        <span>
+          Si compartes una captura con 10 amigos y nos mandas la evidencia por
+          WhatsApp, puedes ganar un esquite clásico con un ingrediente a tu
+          gusto.
         </span>
       </aside>
       <button className="wide-action" type="submit" disabled={!isOpen}>
