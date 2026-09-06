@@ -3,6 +3,7 @@
 import { MouseEvent, useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import InstallPrompt from "@/components/InstallPrompt";
+import ShareLinkButton from "@/components/ShareLinkButton";
 
 const saturdayMessage =
   "Te extraño, pronto nos veremos. Hoy me tocó sobrevivir a la uni.";
@@ -138,6 +139,10 @@ export default function Home() {
               <i aria-hidden="true">✦</i><i aria-hidden="true">✦</i>
             </aside>
           </div>
+          <ShareLinkButton
+            className="home-share-link"
+            label="COMPARTIR ENLACE DE PÁGINA"
+          />
         </div>
         <aside className="future-space" id="domicilio">
           <p>PRÓXIMAMENTE</p>

@@ -411,3 +411,18 @@ body { background-color: #0d0c0a; background-image: repeating-linear-gradient(0d
 @media (max-width: 720px) {
   .hero-actions { display: grid; gap: 10px; margin-top: 15px; }.hero-actions .hero-maicito-free { margin: 0; order: -1; }
 }
+
+/* Compartir mantiene el antojo circulando y celebra cada recomendación. */
+.share-control { display: inline-block; position: relative; }.share-control > button { align-items: center; background: transparent; border: 1px solid rgba(245,181,27,.72); color: var(--maize); display: inline-flex; font-size: 10px; font-weight: 900; gap: 9px; letter-spacing: .11em; min-height: 42px; padding: 0 13px; transition: background .2s ease, color .2s ease, transform .2s ease; }.share-control > button i { color: var(--ember); font-size: 17px; font-style: normal; line-height: 1; }.share-control > button:hover { background: var(--maize); color: #1b1710; transform: translate(-2px,-2px); }.share-control > button:hover i { color: var(--fire); }
+.home-share-link { margin-top: 18px; }.home-share-link > button { background: rgba(7,7,6,.48); }
+.menu-share-row { margin: -19px 0 57px; position: relative; z-index: 2; }.menu-share-row > .share-control > button { box-shadow: 3px 3px 0 var(--fire); }
+.share-order-button { display: block; margin: 0 0 17px; width: 100%; }.share-order-button > button { background: #211e19; justify-content: center; min-height: 54px; width: 100%; }.share-order-button > button:hover { background: var(--maize); }
+.share-celebration { align-items: center; animation: share-celebration 2.5s cubic-bezier(.2,.8,.3,1) both; background: #1e1a15; border: 2px solid var(--maize); box-shadow: 8px 8px 0 var(--fire), 0 0 0 100vmax rgba(0,0,0,.36); color: var(--bone); display: grid; gap: 7px; justify-items: center; left: 50%; min-width: min(350px,calc(100vw - 40px)); padding: 21px 24px; pointer-events: none; position: fixed; text-align: center; top: 50%; transform: translate(-50%,-50%); z-index: 100; }.share-celebration strong { color: var(--maize); font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; font-size: clamp(24px,4vw,38px); letter-spacing: .02em; line-height: .92; }.share-celebration small { color: #d9cdb9; font-size: 13px; font-weight: 700; }.share-celebration i { animation: share-spark .55s ease-in-out infinite alternate; color: var(--ember); font-size: 21px; font-style: normal; }.share-celebration i:last-child { animation-delay: .18s; color: var(--maize); }@keyframes share-celebration { 0% { opacity: 0; transform: translate(-50%,-44%) scale(.74); } 12%,78% { opacity: 1; transform: translate(-50%,-50%) scale(1); } 100% { opacity: 0; transform: translate(-50%,-56%) scale(.9); } }@keyframes share-spark { to { transform: rotate(24deg) scale(1.25); } }
+
+@media (max-width: 720px) {
+  .home-share-link { margin-top: 13px; }.home-share-link > button { font-size: 9px; }.menu-share-row { margin: -24px 0 47px; }.menu-share-row > .share-control > button { font-size: 9px; }.share-celebration { min-width: min(300px,calc(100vw - 32px)); padding: 19px 16px; }.share-celebration small { font-size: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .share-celebration, .share-celebration i { animation: none; }
+}

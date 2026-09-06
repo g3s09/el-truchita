@@ -10,6 +10,7 @@ import {
   MenuSection as MenuSectionType,
   Product,
 } from "@/lib/menu";
+import ShareLinkButton from "@/components/ShareLinkButton";
 
 type SnackFlavor = {
   id: string;
@@ -520,6 +521,14 @@ export default function MenuExperience() {
     () => cart.reduce((sum, item) => sum + cartItemTotal(item), 0),
     [cart],
   );
+  const orderShareText = useMemo(() => {
+    const preparations = cart.map((item) => item.product.name).join(", ");
+    return (
+      "🌽🔥 Mi antojo de El Truchita: " +
+      (preparations || "una charola al carbón") +
+      ". Pide tus esquites al carbón aquí, o te freseas."
+    );
+  }, [cart]);
   const isOpen = status?.open !== false;
 
   const triggerMaicito = (action: Exclude<MaicitoAction, "idle">) => {
@@ -659,7 +668,7 @@ export default function MenuExperience() {
     if (!limit || activeProduct?.id === "elote-con-todo") return;
     setSelectedSpiceIds((current) => {
       if (current.includes(id)) return current.filter((item) => item !== id);
-      if (current.length >= limit) return current;
+      if (current.length >= limit) return [...current.slice(0, -1), id];
       return [...current, id];
     });
   };
@@ -880,6 +889,9 @@ export default function MenuExperience() {
             </p>
           </div>
         </div>
+        <div className="menu-share-row">
+          <ShareLinkButton label="COMPARTIR ENLACE DE PÁGINA" />
+        </div>
 
         <section
           className="arcade-level-select"
@@ -1048,12 +1060,12 @@ export default function MenuExperience() {
           <aside className="share-promo">
             <p>RETO DEL ANTOJO</p>
             <strong>
-              Comparte una captura de nuestra página o tu preparación con 10
-              amigos en redes y envíanos la evidencia por WhatsApp.
+              Comparte el enlace de tus preparaciones a tus amigos.
             </strong>
             <span>
-              Podrás ser acreedor a un esquite clásico con un ingrediente a tu
-              gusto. No esperes más.
+              Si lo haces con 10 amistades o familiares y posteriormente nos
+              envías una captura, podrás ser acreedor a un esquite “Clásico”
+              de 1 ingrediente. ¡No esperes más!
             </span>
           </aside>
         </div>
@@ -1169,6 +1181,7 @@ export default function MenuExperience() {
                 setCustomer={setCustomer}
                 total={total}
                 reference={reference}
+                shareText={orderShareText}
                 isOpen={isOpen}
                 statusLabel={status?.label}
                 onSubmit={handleCheckout}
@@ -1433,16 +1446,14 @@ function Customizer({
               {cornSpiceSlots
                 ? activeProduct.id === "elote-con-todo"
                   ? "Esta preparación ya incluye las cuatro opciones de la casa."
-                  : "Tú eliges " + cornSpiceSlots + ". " + selectedCornSpices.length + " de " + cornSpiceSlots + " seleccionados."
+                  : "Tú eliges " + cornSpiceSlots + ". " + selectedCornSpices.length + " de " + cornSpiceSlots + " seleccionados." + (selectedCornSpices.length === cornSpiceSlots ? " ¿Te equivocaste? Toca el que quieres quitar, o toca otro y cambia el último, sin salir." : "")
                 : "Va natural, recién salido del carbón. La mayonesa y el queso son opcionales."}
             </p>
             {cornSpiceSlots > 0 && (
               <div>
                 {spicyOptions.map((option) => {
                   const selected = selectedSpiceIds.includes(option.id);
-                  const disabled =
-                    activeProduct.id === "elote-con-todo" ||
-                    (!selected && selectedCornSpices.length >= cornSpiceSlots);
+                  const disabled = activeProduct.id === "elote-con-todo";
                   return (
                     <label
                       className={selected ? "selected" : ""}
@@ -1783,6 +1794,7 @@ function CheckoutForm({
   setCustomer,
   total,
   reference,
+  shareText,
   isOpen,
   statusLabel,
   onSubmit,
@@ -1792,6 +1804,7 @@ function CheckoutForm({
   setCustomer: (value: CustomerDetails) => void;
   total: number;
   reference: string;
+  shareText: string;
   isOpen: boolean;
   statusLabel?: string;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -2003,17 +2016,21 @@ function CheckoutForm({
         </span>
       </aside>
       <aside className="checkout-share-note">
-        <p>NO TE LO GOZES A SOLAS</p>
+        <p>COMPARTE, MUÉSTRANOS Y GANA</p>
         <strong>
-          Comparte esta página con esa amistad que siempre dice “no tengo
-          hambre” y termina robando cucharadas.
+          Comparte el enlace de tus preparaciones a tus amigos.
         </strong>
         <span>
-          Si compartes una captura con 10 amigos y nos mandas la evidencia por
-          WhatsApp, puedes ganar un esquite clásico con un ingrediente a tu
-          gusto.
+          Si lo haces con 10 amistades o familiares y posteriormente nos
+          envías una captura, podrás ser acreedor a un esquite “Clásico” de 1
+          ingrediente. ¡No esperes más!
         </span>
       </aside>
+      <ShareLinkButton
+        className="share-order-button"
+        label="COMPARTIR, MUÉSTRANOS Y GANA"
+        shareText={shareText}
+      />
       <button className="wide-action" type="submit" disabled={!isOpen}>
         {isOpen ? "ENVIAR A WHATSAPP" : "PEDIDOS CERRADOS"} <span>↗</span>
       </button>
