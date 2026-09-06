@@ -399,3 +399,15 @@ body { background-color: #0d0c0a; background-image: repeating-linear-gradient(0d
 @media (max-width: 720px) {
   .delivery-zone { margin-bottom: 21px; }.delivery-zone span, .share-promo strong, .checkout-share-note strong { font-size: 12px; }
 }
+
+/* En escritorio Maicito acompaña la entrada al menú; en móvil conserva su sitio en la columna. */
+@media (min-width: 721px) {
+  .hero-actions .hero-maicito-free { align-items: center; display: flex; flex: 0 0 82px; height: 76px; margin: -13px 0 -13px 4px; position: relative; right: auto; top: auto; width: 82px; }
+  .hero-actions .hero-maicito-free img { height: 74px; width: 74px; }
+  .hero-actions .hero-maicito-free p { font-size: 11px; left: 76px; right: auto; text-align: left; top: 20px; width: 178px; }
+  .hero-actions .hero-maicito-free i { font-size: 12px; left: 8px; top: 5px; }.hero-actions .hero-maicito-free i:last-child { right: 2px; top: 52px; }
+}
+
+@media (max-width: 720px) {
+  .hero-actions { display: grid; gap: 10px; margin-top: 15px; }.hero-actions .hero-maicito-free { margin: 0; order: -1; }
+}
