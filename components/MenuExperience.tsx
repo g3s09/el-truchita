@@ -9,6 +9,7 @@ type Preparation = 'standard' | 'muy-mexicano';
 type CustomizeOptions = { snackFlavor?: SnackFlavor; bagFilling?: Product; preparation?: Preparation };
 type CartItem = { id: string; product: Product; mayo: boolean; queso: boolean; extras: ExtraOption[]; note: string; snackFlavor?: SnackFlavor; bagFilling?: Product; preparation: Preparation };
 type Modal = 'none' | 'customize' | 'cart' | 'checkout' | 'sending';
+type MaicitoAction = 'idle' | 'guide' | 'celebrate';
 type CustomerDetails = { name: string; phone: string; address: string; references: string; exactLocation: string; payment: 'exact' | 'change'; changeFor: string };
 type BusinessStatus = { open: boolean; label: string; isSaturday: boolean };
 type DeliveryPolicy = { title: string; detail: string; whatsapp: string };
@@ -138,7 +139,9 @@ export default function MenuExperience() {
   const [emptyCartMessage, setEmptyCartMessage] = useState(emptyCartMessages[0]);
   const [addedCartMessage, setAddedCartMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(sendingMessages[0]);
+  const [maicitoAction, setMaicitoAction] = useState<MaicitoAction>('idle');
   const panelRail = useRef<HTMLDivElement>(null);
+  const maicitoTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     let live = true;
@@ -175,6 +178,8 @@ export default function MenuExperience() {
     setEmptyCartMessage(nextMaicitoMessage('truchita-empty-cart-phrase', emptyCartMessages));
   }, []);
 
+  useEffect(() => () => window.clearTimeout(maicitoTimer.current), []);
+
   const availableProducts = useMemo(() => menu.products.filter((product) => product.available !== false), [menu.products]);
   const productsBySection = useMemo(() => Object.fromEntries(panelDetails.map((panel) => [panel.key, availableProducts.filter((product) => product.section === panel.key)])) as Record<MenuSectionType, Product[]>, [availableProducts]);
   const bagFillings = useMemo(() => [...productsBySection.traditional, ...productsBySection.specialty], [productsBySection]);
@@ -189,6 +194,12 @@ export default function MenuExperience() {
   const total = useMemo(() => cart.reduce((sum, item) => sum + cartItemTotal(item), 0), [cart]);
   const isOpen = status?.open !== false;
 
+  const triggerMaicito = (action: Exclude<MaicitoAction, 'idle'>) => {
+    window.clearTimeout(maicitoTimer.current);
+    setMaicitoAction(action);
+    maicitoTimer.current = window.setTimeout(() => setMaicitoAction('idle'), action === 'celebrate' ? 2100 : 1600);
+  };
+
   useEffect(() => {
     setCart((items) => items.filter((item) => {
       const currentProduct = menu.products.find((product) => product.id === item.product.id);
@@ -198,6 +209,7 @@ export default function MenuExperience() {
   }, [menu.products]);
 
   const openCustomizer = (product: Product, options: CustomizeOptions = {}) => {
+    triggerMaicito('guide');
     setActiveProduct(product);
     setMayo(true);
     setQueso(true);
@@ -212,6 +224,7 @@ export default function MenuExperience() {
   const navigatePanel = (index: number) => {
     const rail = panelRail.current;
     if (!rail) return;
+    triggerMaicito('guide');
     rail.scrollTo({ left: rail.clientWidth * index, behavior: 'smooth' });
     setActivePanel(index);
     setVisitedPanels((current) => current.includes(index) ? current : [...current, index]);
@@ -230,6 +243,7 @@ export default function MenuExperience() {
   const charcoalBet = () => {
     const candidates = availableExtras.filter((extra) => !extra.onlyWithIngredients || activeProduct?.hasIngredients);
     const extra = candidates[Math.floor(Math.random() * candidates.length)];
+    triggerMaicito('celebrate');
     setMayo(true);
     setQueso(true);
     setSelectedExtraIds(extra ? [extra.id] : []);
@@ -238,6 +252,7 @@ export default function MenuExperience() {
 
   const addToCart = () => {
     if (!activeProduct) return;
+    triggerMaicito('celebrate');
     setCart((items) => [...items, {
       id: activeProduct.id + '-' + Date.now(),
       product: activeProduct, mayo, queso, extras: selectedExtras, note: note.trim(),
@@ -271,6 +286,7 @@ export default function MenuExperience() {
   const handleCheckout = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!isOpen) return;
+    triggerMaicito('celebrate');
     setSendingMessage(nextMaicitoMessage('truchita-sending-phrase', sendingMessages));
     setModal('sending');
     window.setTimeout(() => window.location.assign(whatsappUrl()), 1150);
@@ -296,6 +312,7 @@ export default function MenuExperience() {
       <nav aria-label="Navegación principal"><a href="/">INICIO</a><a href="#menu">MENÚ</a><a href="#contacto">A DOMICILIO</a></nav>
       <button className="header-order" type="button" onClick={openCart}>MI PEDIDO <i className={cart.length ? 'cart-dot active' : 'cart-dot'} /></button>
     </header>
+    <div className={'maicito-roamer is-' + maicitoAction} aria-hidden="true"><img src={maicitoAction === 'guide' ? '/maicito-truchita-guide.png' : '/maicito-truchita-free.png'} alt="" /><i>✦</i><i>✦</i><i>✦</i></div>
 
     <section className="menu menu-only" id="menu" aria-labelledby="menu-title">
       <div className="menu-lead">
@@ -336,7 +353,7 @@ export default function MenuExperience() {
       {modal === 'customize' && activeProduct && <Customizer activeProduct={activeProduct} activeBasePrice={activeBasePrice} activePrice={activePrice} preparation={preparation} mayo={mayo} queso={queso} setMayo={setMayo} setQueso={setQueso} snackFlavor={snackFlavor} setSnackFlavor={setSnackFlavor} bagFilling={bagFilling} setBagFilling={setBagFilling} bagFillings={bagFillings} availableExtras={availableExtras} selectedExtraIds={selectedExtraIds} toggleExtra={toggleExtra} note={note} setNote={setNote} onCharcoalBet={charcoalBet} onAdd={addToCart} />}
       {modal === 'cart' && <CartView cart={cart} total={total} isOpen={isOpen} isSaturday={status?.isSaturday} statusLabel={status?.label} emptyMessage={emptyCartMessage} addedMessage={addedCartMessage} suggestedPanel={panelDetails[nextPanel]} onRemove={(id) => setCart((items) => items.filter((item) => item.id !== id))} onEmpty={() => { setCart([]); setReference(''); setAddedCartMessage(''); setEmptyCartMessage(nextMaicitoMessage('truchita-empty-cart-phrase', emptyCartMessages)); }} onContinue={closeCartToMenu} onExplore={() => { setModal('none'); window.setTimeout(() => navigatePanel(nextPanel), 0); }} onCheckout={() => { if (!isOpen) return; setReference((current) => current || orderReference()); setModal('checkout'); }} />}
       {modal === 'checkout' && <CheckoutForm customer={customer} setCustomer={setCustomer} total={total} reference={reference} isOpen={isOpen} statusLabel={status?.label} onSubmit={handleCheckout} onBack={() => setModal('cart')} />}
-      {modal === 'sending' && <div className="sending-state"><div className="corn-flight" aria-hidden="true"><img src="/maicito-truchita.png" alt="" /><i>✦</i><i>✦</i><i>✦</i></div><p className="modal-kicker">PREPARANDO TU MENSAJE</p><h2>¡VA VOLANDO<br />A WHATSAPP!</h2><p>{sendingMessage}</p></div>}
+      {modal === 'sending' && <div className="sending-state"><div className="corn-flight" aria-hidden="true"><img src="/maicito-truchita-free.png" alt="" /><i>✦</i><i>✦</i><i>✦</i></div><p className="modal-kicker">PREPARANDO TU MENSAJE</p><h2>¡VA VOLANDO<br />A WHATSAPP!</h2><p>{sendingMessage}</p></div>}
     </section></div>}
   </main>;
 }
@@ -360,7 +377,7 @@ function ToggleRow({ kind, title, description, checked, disabled, onChange }: { 
 }
 
 function Maicito({ mood = 'happy', caption }: { mood?: 'happy' | 'sleepy' | 'sad'; caption?: string }) {
-  return <figure className={'maicito maicito-' + mood} aria-hidden="true"><img src={mood === 'sad' ? '/maicito-truchita-triste.png' : '/maicito-truchita.png'} alt="" />{caption && <figcaption>{caption}</figcaption>}</figure>;
+  return <figure className={'maicito maicito-' + mood} aria-hidden="true"><img src={mood === 'sad' ? '/maicito-truchita-sad-free.png' : '/maicito-truchita-free.png'} alt="" />{caption && <figcaption>{caption}</figcaption>}</figure>;
 }
 
 function CartView({ cart, total, isOpen, isSaturday, statusLabel, emptyMessage, addedMessage, suggestedPanel, onRemove, onEmpty, onContinue, onExplore, onCheckout }: { cart: CartItem[]; total: number; isOpen: boolean; isSaturday?: boolean; statusLabel?: string; emptyMessage: string; addedMessage: string; suggestedPanel: typeof panelDetails[number]; onRemove: (id: string) => void; onEmpty: () => void; onContinue: () => void; onExplore: () => void; onCheckout: () => void }) {

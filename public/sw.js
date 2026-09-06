@@ -1,5 +1,5 @@
-const CACHE_NAME = 'el-truchita-v3';
-const CORE_ASSETS = ['/', '/menu', '/manifest.webmanifest', '/app-icon-192.png', '/app-icon-512.png', '/hero-corn.png', '/esquites-charola-carbon.png', '/botanas-en-bolsa.png', '/maicito-truchita.png', '/maicito-truchita-triste.png'];
+const CACHE_NAME = 'el-truchita-v4';
+const CORE_ASSETS = ['/', '/menu', '/manifest.webmanifest', '/app-icon-192.png', '/app-icon-512.png', '/hero-corn.png', '/esquites-charola-carbon.png', '/botanas-en-bolsa.png', '/maicito-truchita-free.png', '/maicito-truchita-guide.png', '/maicito-truchita-sad-free.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)).catch(() => undefined));
