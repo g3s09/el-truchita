@@ -49,15 +49,15 @@ export const defaultMenu: MenuData = {
     { id: 'clasico', section: 'traditional', name: 'EL CLÁSICO', price: 70, description: 'Elote asado al carbón, mayonesa, queso, limón y chile.', image: traditionalImages.clasico, hasIngredients: false, service: 'cup' },
     { id: 'tocino', section: 'traditional', name: 'CON TOCINO', price: 80, description: 'Elote al carbón con tocino, limón y chile.', image: traditionalImages.tocino, hasIngredients: true, service: 'cup' },
     { id: 'salchicha', section: 'traditional', name: 'CON SALCHICHA', price: 80, description: 'Elote al carbón con salchicha, limón y chile.', image: traditionalImages.salchicha, hasIngredients: true, service: 'cup' },
-    { id: 'tocino-salchicha', section: 'traditional', name: 'TOCINO + SALCHICHA', price: 85, description: 'Elote al carbón con el doble antojo.', image: traditionalImages['tocino-salchicha'], hasIngredients: true, service: 'cup' },
+    { id: 'tocino-salchicha', section: 'traditional', name: 'EL VORAZ', price: 85, description: 'Elote al carbón con tocino doradito, salchicha, mayonesa, queso, limón y chile.', image: traditionalImages['tocino-salchicha'], hasIngredients: true, service: 'cup' },
     { id: 'tocino-queso', section: 'traditional', name: 'TOCINO + QUESO ESPECIAL', price: 95, description: 'Tocino y mezcla de queso manchego/hebra.', image: traditionalImages['tocino-queso'], hasIngredients: true, service: 'cup' },
     { id: 'salchicha-queso', section: 'traditional', name: 'SALCHICHA + QUESO ESPECIAL', price: 95, description: 'Salchicha y mezcla de queso manchego/hebra.', image: traditionalImages['salchicha-queso'], hasIngredients: true, service: 'cup' },
-    { id: 'tatemado', section: 'specialty', name: 'EL TATEMADO', price: 125, description: 'Poblano tatemado, cebolla asada, jalapeño asado, chorizo dorado, queso especial y salsa Truchita.', tag: 'FUEGO', image: productImage, hasIngredients: true, service: 'cup' },
-    { id: 'choriqueso', section: 'specialty', name: 'EL CHORIQUESO', price: 135, description: 'Chorizo dorado, mezcla de quesos, cebolla asada y salsa tatemada.', tag: 'FUEGO', image: productImage, hasIngredients: true, service: 'cup' },
-    { id: 'norteno', section: 'specialty', name: 'EL NORTEÑO', price: 145, description: 'Carne asada, cebolla tatemada, queso fundido, chile toreado y salsa de la casa.', tag: 'AL CARBÓN', image: productImage, hasIngredients: true, service: 'cup' },
-    { id: 'poblano', section: 'specialty', name: 'EL POBLANO', price: 155, description: 'Rajas de poblano tatemado, champiñones dorados, queso fundido, cebolla y salsa verde.', tag: 'DE LA CASA', image: productImage, hasIngredients: true, service: 'cup' },
-    { id: 'alambre', section: 'specialty', name: 'EL ALAMBRE', price: 165, description: 'Carne asada, tocino, poblano tatemado, cebolla, quesos fundidos y salsa de la casa.', tag: 'CASA', image: productImage, hasIngredients: true, service: 'cup' },
-    { id: 'truchita', section: 'specialty', name: 'EL TRUCHITA', price: 170, description: 'Carne asada, chorizo, tocino, poblano tatemado, cebolla asada, quesos, salsa Truchita y limón.', tag: 'ESPECIALIDAD DE LA CASA', image: productImage, hasIngredients: true, service: 'cup' },
+    { id: 'tatemado', section: 'specialty', name: 'EL TATEMADO', price: 125, description: 'Poblano tatemado, cebolla asada, jalapeño asado, chorizo dorado y queso especial.', tag: 'FUEGO', image: productImage, hasIngredients: true, service: 'cup' },
+    { id: 'choriqueso', section: 'specialty', name: 'EL CHORIQUESO', price: 135, description: 'Chorizo dorado, mezcla de quesos y cebolla asada.', tag: 'FUEGO', image: productImage, hasIngredients: true, service: 'cup' },
+    { id: 'norteno', section: 'specialty', name: 'EL NORTEÑO', price: 145, description: 'Carne asada, cebolla tatemada, queso fundido y chile toreado.', tag: 'AL CARBÓN', image: productImage, hasIngredients: true, service: 'cup' },
+    { id: 'poblano', section: 'specialty', name: 'EL POBLANO', price: 155, description: 'Rajas de poblano tatemado, champiñones dorados, queso fundido y cebolla.', tag: 'DE LA CASA', image: productImage, hasIngredients: true, service: 'cup' },
+    { id: 'alambre', section: 'specialty', name: 'EL ALAMBRE', price: 165, description: 'Carne asada, tocino, poblano tatemado, cebolla y quesos fundidos.', tag: 'CASA', image: productImage, hasIngredients: true, service: 'cup' },
+    { id: 'truchita', section: 'specialty', name: 'EL TRUCHITA', price: 170, description: 'Carne asada, chorizo, tocino, poblano tatemado, cebolla asada, quesos y limón.', tag: 'ESPECIALIDAD DE LA CASA', image: productImage, hasIngredients: true, service: 'cup' },
     { id: 'elote-clasico', section: 'elotes', name: 'ELOTE CLÁSICO', price: 45, description: 'Elote entero asado al carbón, con mayonesa, queso, limón y chile.', image: cornImage, hasIngredients: false, service: 'corn' },
     { id: 'elote-con-todo', section: 'elotes', name: 'ELOTE CON TODO', price: 60, description: 'Elote entero al carbón con queso, mayonesa, limón, chile y un toque de la casa.', tag: 'AL CARBÓN', image: cornImage, hasIngredients: true, service: 'corn' },
     { id: 'esquite-en-bolsa', section: 'bolsa', name: 'UN GUSTITO MÁS', price: 105, description: 'Tu botana favorita abierta y rellena con el esquite clásico o especial que tú elijas.', tag: 'EL ANTOJO COMPLETO', image: bagImage, hasIngredients: true, service: 'bag' },
@@ -65,6 +65,7 @@ export const defaultMenu: MenuData = {
   extras: [
     { id: 'extra-elote', name: 'EXTRA ELOTE', price: 25, description: 'Una porción más de maíz recién asado.', imagePosition: 'elote' },
     { id: 'extra-ingrediente', name: 'EXTRA INGREDIENTE', price: 25, description: 'Más del ingrediente que ya lleva tu preparación.', imagePosition: 'ingredientes', onlyWithIngredients: true },
+    { id: 'mezcla-quesos', name: 'MEZCLA DE QUESOS', price: 30, description: 'Una porción extra de quesos para cualquier esquite.', imagePosition: 'queso', onlyForServices: ['cup', 'bag'] },
     { id: 'tocino-elote', name: 'TOCINO EXTRA', price: 25, description: 'Tocino doradito para tu elote entero.', imagePosition: 'ingredientes', onlyForServices: ['corn'] },
     { id: 'salchicha-elote', name: 'SALCHICHA EXTRA', price: 25, description: 'Salchicha dorada para tu elote entero.', imagePosition: 'ingredientes', onlyForServices: ['corn'] },
     { id: 'quesos-fundidos-elote', name: 'QUESOS FUNDIDOS', price: 25, description: 'Un toque de quesos fundidos para tu elote entero.', imagePosition: 'queso', onlyForServices: ['corn'] },
@@ -110,10 +111,15 @@ export function normalizeMenu(menu: MenuData): MenuData {
   const defaultsById = new Map(defaultMenu.products.map((product) => [product.id, product]));
   const products = savedProducts.map((product) => {
     const catalogProduct = defaultsById.get(product.id);
-    if (catalogProduct && product.service === 'cup' && legacyCupImages.has(product.image)) {
-      return { ...product, image: catalogProduct.image, available: product.available !== false };
-    }
-    return { ...product, available: product.available !== false };
+    const useTrayImage = Boolean(catalogProduct && product.service === 'cup' && legacyCupImages.has(product.image));
+    const isSpecialty = product.section === 'specialty' && product.description.toLowerCase().includes('salsa');
+    return {
+      ...product,
+      image: useTrayImage && catalogProduct ? catalogProduct.image : product.image,
+      name: product.id === 'tocino-salchicha' && catalogProduct ? catalogProduct.name : product.name,
+      description: (isSpecialty || product.id === 'tocino-salchicha') && catalogProduct ? catalogProduct.description : product.description,
+      available: product.available !== false,
+    };
   });
   const savedIds = new Set(products.map((product) => product.id));
   for (const product of defaultMenu.products) {
