@@ -426,3 +426,37 @@ body { background-color: #0d0c0a; background-image: repeating-linear-gradient(0d
 @media (prefers-reduced-motion: reduce) {
   .share-celebration, .share-celebration i { animation: none; }
 }
+
+/* El pedido abre como una app: el fondo queda quieto y el diálogo conserva su propio scroll. */
+html.modal-open, body.modal-open { overscroll-behavior: none; }
+.modal-backdrop { overscroll-behavior: contain; touch-action: pan-y; }
+.order-modal { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.scheduled-order-notice { border-left-color: var(--fire); }
+.scheduled-order-notice strong { color: var(--fire); display: block; font-size: 11px; letter-spacing: .08em; line-height: 1.35; margin: 5px 0; }
+
+/* Redes en clave de arcade: presentes sin competir con el pedido. */
+.social-section { border-top: 1px solid #504a40; margin-top: 31px; padding-top: 24px; position: relative; }
+.social-section .section-kicker { border-top: 0; color: var(--fire); font-size: 9px; margin: 0 0 9px; padding: 0; }
+.social-section h3 { font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; font-size: clamp(30px,4vw,44px); letter-spacing: .01em; line-height: .9; margin: 0 0 12px; }
+.social-section > p:not(.section-kicker) { color: #514b43; font-size: 13px; font-weight: 700; line-height: 1.42; margin: 0 0 14px; max-width: 420px; }
+.social-pixel-grid { display: grid; gap: 9px; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.social-pixel-link { align-items: center; background: #211e19; border: 2px solid #211e19; box-shadow: 3px 3px 0 var(--fire); color: var(--bone); display: grid; gap: 10px; grid-template-columns: 34px minmax(0,1fr) auto; min-height: 66px; padding: 10px; transition: transform .18s ease, box-shadow .18s ease, filter .18s ease; }
+.social-pixel-link:hover { box-shadow: 5px 5px 0 var(--fire); filter: saturate(1.16); transform: translate(-2px,-2px); }
+.social-pixel-link > i { align-items: center; border: 2px solid currentColor; color: var(--maize); display: inline-flex; font-family: Arial Black,Arial,sans-serif; font-size: 25px; height: 31px; justify-content: center; line-height: 1; width: 31px; }
+.social-pixel-link.facebook > i { background: #e5d8bb; border-color: #e5d8bb; color: #211e19; font-family: Arial Black,Arial,sans-serif; font-size: 27px; }
+.social-pixel-link span { display: grid; gap: 4px; min-width: 0; }.social-pixel-link b { font-size: 11px; letter-spacing: .1em; }.social-pixel-link small { color: #cbbfae; font-size: 10px; font-weight: 700; overflow-wrap: anywhere; }.social-pixel-link em { color: var(--ember); font-size: 20px; font-style: normal; }
+.suggestion-link { align-items: center; border-bottom: 1px solid var(--fire); color: var(--fire); display: inline-flex; font-size: 10px; font-weight: 900; gap: 8px; letter-spacing: .09em; margin-top: 17px; min-height: 34px; padding: 0 1px; }.suggestion-link span { font-size: 17px; }.suggestion-link b { font-size: 17px; }.suggestion-link:hover { color: #982614; }
+.social-travel { align-items: center; animation: social-travel .9s ease both; background: var(--fire); box-shadow: 4px 4px 0 #211e19; color: var(--bone); display: flex; font-size: 11px; font-weight: 900; gap: 10px; justify-content: center; letter-spacing: .1em; min-height: 54px; padding: 12px 16px; pointer-events: none; position: fixed; right: 22px; top: 84px; z-index: 101; }.social-travel i { color: var(--maize); font-size: 15px; font-style: normal; }@keyframes social-travel { 0% { opacity: 0; transform: translateY(-13px) scale(.88); } 17%,80% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-7px) scale(.96); } }
+
+/* Un guiño de temporada, solo durante las fiestas correspondientes. */
+.seasonal-accent { display: flex; gap: 9px; pointer-events: none; position: fixed; right: 20px; top: 76px; z-index: 8; }.seasonal-accent i { animation: seasonal-sway 3.5s ease-in-out infinite; color: #fff3d4; filter: drop-shadow(1px 2px 0 rgba(0,0,0,.5)); font-size: 16px; font-style: normal; opacity: .82; }.seasonal-accent i:nth-child(2) { animation-delay: .45s; }.seasonal-accent i:nth-child(3) { animation-delay: .9s; }.seasonal-accent i:nth-child(4) { animation-delay: 1.35s; }.seasonal-patrias { border-bottom: 2px solid #16834a; padding: 0 3px 4px; }.seasonal-muertos { border-bottom: 2px solid #d65b21; }.seasonal-navidad { border-bottom: 2px solid #be3021; }.seasonal-patrias i:nth-child(3) { color: #f2d4a6; font-size: 22px; transform: rotate(-8deg); }.seasonal-muertos i { font-size: 18px; }.seasonal-navidad i { color: #fde7a5; }@keyframes seasonal-sway { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-3px) rotate(4deg); } }
+
+@media (max-width: 720px) {
+  .modal-backdrop { align-items: flex-start; overflow-y: auto; padding: 12px; }
+  .order-modal { margin: auto 0; max-height: calc(100dvh - 24px); }
+  .social-section { margin-top: 27px; }.social-section h3 { font-size: 35px; }.social-pixel-grid { grid-template-columns: 1fr; }.social-pixel-link { min-height: 61px; }.social-travel { left: 16px; right: 16px; top: 77px; }.seasonal-accent { right: 14px; top: 69px; }.seasonal-accent i { font-size: 13px; }.seasonal-patrias i:nth-child(3) { font-size: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .social-travel, .seasonal-accent i { animation: none; }
+}

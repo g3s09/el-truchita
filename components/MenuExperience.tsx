@@ -11,6 +11,8 @@ import {
   Product,
 } from "@/lib/menu";
 import ShareLinkButton from "@/components/ShareLinkButton";
+import SeasonalAccent from "@/components/SeasonalAccent";
+import SocialLinks from "@/components/SocialLinks";
 
 type SnackFlavor = {
   id: string;
@@ -299,6 +301,12 @@ function businessStatus(now = new Date()): BusinessStatus {
   };
 }
 
+function scheduledOrderNotice(isSaturday?: boolean) {
+  return isSaturday
+    ? "SÁBADO CERRADO. Puedes enviar tu pedido ahora, pero la orden se tomará el domingo a primera hora de abrir: 6:30 p. m."
+    : "FUERA DE HORARIO. Puedes enviar tu pedido ahora, pero la orden se tomará a primera hora de nuestro horario normal de apertura: 6:30 p. m.";
+}
+
 function deliveryPolicy(total: number): DeliveryPolicy {
   if (total >= 400)
     return {
@@ -437,6 +445,39 @@ export default function MenuExperience() {
     const timer = window.setInterval(updateStatus, 60000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (modal === "none") return;
+    const body = document.body;
+    const root = document.documentElement;
+    const scrollY = window.scrollY;
+    const bodyStyle = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+    };
+    const rootOverflow = root.style.overflow;
+
+    body.classList.add("modal-open");
+    root.classList.add("modal-open");
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = "-" + scrollY + "px";
+    body.style.width = "100%";
+    root.style.overflow = "hidden";
+
+    return () => {
+      body.classList.remove("modal-open");
+      root.classList.remove("modal-open");
+      body.style.overflow = bodyStyle.overflow;
+      body.style.position = bodyStyle.position;
+      body.style.top = bodyStyle.top;
+      body.style.width = bodyStyle.width;
+      root.style.overflow = rootOverflow;
+      window.scrollTo(0, scrollY);
+    };
+  }, [modal]);
 
   useEffect(() => {
     const syncCompanion = () => {
@@ -664,7 +705,7 @@ export default function MenuExperience() {
     );
 
   const toggleCornSpice = (id: string) => {
-    const limit = cornSpiceLimit(activeProduct);
+    const limit = cornSpiceLimit(activeProduct ?? undefined);
     if (!limit || activeProduct?.id === "elote-con-todo") return;
     setSelectedSpiceIds((current) => {
       if (current.includes(id)) return current.filter((item) => item !== id);
@@ -746,6 +787,9 @@ export default function MenuExperience() {
         ? "Sí, llevar cambio para " + money(Number(customer.changeFor))
         : "No, pago exacto";
     const delivery = deliveryPolicy(total);
+    const orderTiming = isOpen
+      ? "Pedido enviado durante horario de atención."
+      : scheduledOrderNotice(status?.isSaturday);
     const message =
       "*PEDIDO NUEVO — EL TRUCHITA* 🔥\n*Folio:* " +
       reference +
@@ -755,6 +799,8 @@ export default function MenuExperience() {
       money(total) +
       "*\nEnvío: " +
       delivery.whatsapp +
+      "\n\n*AVISO DE HORARIO:* " +
+      orderTiming +
       "\n\n*Datos de entrega*\nNombre: " +
       customer.name +
       "\nTeléfono: " +
@@ -778,7 +824,6 @@ export default function MenuExperience() {
 
   const handleCheckout = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!isOpen) return;
     playSound("add");
     triggerMaicito("celebrate");
     setSendingMessage(
@@ -811,6 +856,7 @@ export default function MenuExperience() {
 
   return (
     <main className="menu-page">
+      <SeasonalAccent />
       <header className="site-header menu-header">
         <a className="mini-logo" href="/" aria-label="Volver al inicio">
           <span>ESQUITES</span>
@@ -1068,6 +1114,7 @@ export default function MenuExperience() {
               de 1 ingrediente. ¡No esperes más!
             </span>
           </aside>
+          <SocialLinks />
         </div>
       </section>
       <footer>
@@ -1169,7 +1216,6 @@ export default function MenuExperience() {
                   window.setTimeout(() => navigatePanel(nextPanel), 0);
                 }}
                 onCheckout={() => {
-                  if (!isOpen) return;
                   setReference((current) => current || orderReference());
                   setModal("checkout");
                 }}
@@ -1183,6 +1229,7 @@ export default function MenuExperience() {
                 reference={reference}
                 shareText={orderShareText}
                 isOpen={isOpen}
+                isSaturday={status?.isSaturday}
                 statusLabel={status?.label}
                 onSubmit={handleCheckout}
                 onBack={() => setModal("cart")}
@@ -1757,8 +1804,8 @@ function CartView({
                 <p>{statusLabel ?? "CERRADO AHORA"}</p>
                 <span>
                   {isSaturday
-                    ? "Te extraño, pronto nos veremos. Hoy me tocó sobrevivir a la uni."
-                    : "Puedes guardar tu antojo, pero los pedidos se habilitan durante nuestro horario de atención."}
+                    ? "Te extraño, pronto nos veremos. Puedes enviar tu pedido hoy, pero se tomará el domingo a las 6:30 p. m."
+                    : "Puedes enviar tu pedido ahora; se tomará a primera hora de abrir, a las 6:30 p. m."}
                 </span>
               </div>
             </aside>
@@ -1778,10 +1825,9 @@ function CartView({
           <button
             className="wide-action"
             type="button"
-            disabled={!isOpen}
             onClick={onCheckout}
           >
-            {isOpen ? "REALIZAR PEDIDO" : "PEDIDOS CERRADOS"} <span>→</span>
+            {isOpen ? "REALIZAR PEDIDO" : "ENVIAR PARA PRÓXIMA APERTURA"} <span>→</span>
           </button>
         </>
       )}
@@ -1796,6 +1842,7 @@ function CheckoutForm({
   reference,
   shareText,
   isOpen,
+  isSaturday,
   statusLabel,
   onSubmit,
   onBack,
@@ -1806,6 +1853,7 @@ function CheckoutForm({
   reference: string;
   shareText: string;
   isOpen: boolean;
+  isSaturday?: boolean;
   statusLabel?: string;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onBack: () => void;
@@ -1852,12 +1900,10 @@ function CheckoutForm({
         <b>▣ {reference}</b>
       </aside>
       {!isOpen && (
-        <aside className="closed-notice">
+        <aside className="closed-notice scheduled-order-notice">
           <p>{statusLabel ?? "CERRADO AHORA"}</p>
-          <span>
-            El formulario se puede revisar, pero los pedidos se habilitan en
-            horario de atención.
-          </span>
+          <strong>PUEDES ENVIAR TU PEDIDO DESDE AHORA.</strong>
+          <span>{scheduledOrderNotice(isSaturday)}</span>
         </aside>
       )}
       <div className="customer-form">
@@ -2031,8 +2077,8 @@ function CheckoutForm({
         label="COMPARTIR, MUÉSTRANOS Y GANA"
         shareText={shareText}
       />
-      <button className="wide-action" type="submit" disabled={!isOpen}>
-        {isOpen ? "ENVIAR A WHATSAPP" : "PEDIDOS CERRADOS"} <span>↗</span>
+      <button className="wide-action" type="submit">
+        {isOpen ? "ENVIAR A WHATSAPP" : "ENVIAR PARA PRÓXIMA APERTURA"} <span>↗</span>
       </button>
       <button className="back-button" type="button" onClick={onBack}>
         ← VOLVER A MI PEDIDO

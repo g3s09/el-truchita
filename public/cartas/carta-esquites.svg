@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <image href="fondo-carta-truchita.png" width="1080" height="1350" preserveAspectRatio="xMidYMid slice"/>
+  <rect x="38" y="126" width="1004" height="875" fill="#100d0b" fill-opacity=".82" stroke="#e55426" stroke-width="4"/>
+  <rect x="54" y="142" width="972" height="840" fill="none" stroke="#f2bb2b" stroke-opacity=".62" stroke-width="2"/>
+  <text x="540" y="202" fill="#f5c24b" font-family="Arial Black,Arial,sans-serif" font-size="24" font-weight="900" letter-spacing="8" text-anchor="middle">ESQUITES EL TRUCHITA</text>
+  <text x="540" y="255" fill="#f3e3c4" font-family="Impact,Arial Narrow,Arial,sans-serif" font-size="70" letter-spacing="2" text-anchor="middle">AL CARBÓN</text>
+  <text x="540" y="290" fill="#e55426" font-family="Arial, sans-serif" font-size="20" font-weight="900" letter-spacing="5" text-anchor="middle">CARTA · SOLO A DOMICILIO</text>
+  <path d="M85 326H995" stroke="#f2bb2b" stroke-width="3"/>
+  <text x="85" y="374" fill="#f2bb2b" font-family="Impact,Arial Narrow,Arial,sans-serif" font-size="42" letter-spacing="1">LOS TRADICIONALES</text>
+  <text x="85" y="403" fill="#dbcfbb" font-family="Arial, sans-serif" font-size="16" font-weight="700">ELIGE TU CHAROLA · MAYONESA Y QUESO A TU GUSTO</text>
+  <g font-family="Arial, sans-serif" font-weight="800">
+    <text x="85" y="455" fill="#f3e3c4" font-size="25">EL CLÁSICO</text><text x="970" y="455" fill="#f2bb2b" font-size="29" text-anchor="end">$70</text>
+    <text x="85" y="486" fill="#cfc2ae" font-size="16">Brasa, mayonesa, queso, limón y chile.</text>
+    <text x="85" y="544" fill="#f3e3c4" font-size="25">CON TOCINO</text><text x="970" y="544" fill="#f2bb2b" font-size="29" text-anchor="end">$80</text>
+    <text x="85" y="575" fill="#cfc2ae" font-size="16">Elote al carbón, tocino, mayo, queso, limón y chile.</text>
+    <text x="85" y="633" fill="#f3e3c4" font-size="25">CON SALCHICHA</text><text x="970" y="633" fill="#f2bb2b" font-size="29" text-anchor="end">$80</text>
+    <text x="85" y="664" fill="#cfc2ae" font-size="16">Elote al carbón, salchicha, mayo, queso, limón y chile.</text>
+    <rect x="72" y="700" width="915" height="68" fill="#e55426"/><text x="85" y="742" fill="#fff2d4" font-size="28">EL VORAZ · TODOS LOS INGREDIENTES CLÁSICOS</text><text x="970" y="742" fill="#1b1310" font-size="33" text-anchor="end">$115</text>
+    <text x="85" y="813" fill="#f3e3c4" font-size="25">TOCINO + QUESO ESPECIAL</text><text x="970" y="813" fill="#f2bb2b" font-size="29" text-anchor="end">$95</text>
+    <text x="85" y="844" fill="#cfc2ae" font-size="16">Mezcla de quesos, tocino, mayonesa, limón y chile.</text>
+    <text x="85" y="895" fill="#f3e3c4" font-size="25">SALCHICHA + QUESO ESPECIAL</text><text x="970" y="895" fill="#f2bb2b" font-size="29" text-anchor="end">$95</text>
+    <text x="85" y="926" fill="#cfc2ae" font-size="16">Mezcla de quesos, salchicha, mayonesa, limón y chile.</text>
+  </g>
+  <rect x="38" y="1032" width="1004" height="224" fill="#1c1713" fill-opacity=".93" stroke="#f2bb2b" stroke-width="3"/>
+  <text x="74" y="1082" fill="#e55426" font-family="Impact,Arial Narrow,Arial,sans-serif" font-size="43">ESPECIALES DE LA CASA</text>
+  <g font-family="Arial, sans-serif" font-size="22" font-weight="900" fill="#f3e3c4">
+    <text x="76" y="1132">EL TATEMADO</text><text x="300" y="1132" fill="#f2bb2b">$125</text><text x="570" y="1132" fill="#f3e3c4">EL CHORIQUESO</text><text x="960" y="1132" fill="#f2bb2b" text-anchor="end">$135</text>
+    <text x="76" y="1181">EL NORTEÑO</text><text x="300" y="1181" fill="#f2bb2b">$145</text><text x="570" y="1181" fill="#f3e3c4">EL POBLANO</text><text x="960" y="1181" fill="#f2bb2b" text-anchor="end">$155</text>
+    <text x="76" y="1230">EL ALAMBRE</text><text x="300" y="1230" fill="#f2bb2b">$165</text><text x="570" y="1230" fill="#f3e3c4">EL TRUCHITA</text><text x="960" y="1230" fill="#f2bb2b" text-anchor="end">$170</text>
+  </g>
+  <text x="540" y="1304" fill="#f3e3c4" font-family="Arial Black,Arial,sans-serif" font-size="20" font-weight="900" letter-spacing="3" text-anchor="middle">ZACAPOAXTLA Y ALREDEDORES · DOM–VIE 6:30 P. M. — 12:30 A. M.</text>
+</svg>

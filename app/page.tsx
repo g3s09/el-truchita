@@ -4,6 +4,7 @@ import { MouseEvent, useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import InstallPrompt from "@/components/InstallPrompt";
 import ShareLinkButton from "@/components/ShareLinkButton";
+import SeasonalAccent from "@/components/SeasonalAccent";
 
 const saturdayMessage =
   "Te extraño, pronto nos veremos. Hoy me tocó sobrevivir a la uni.";
@@ -52,6 +53,7 @@ export default function Home() {
 
   return (
     <main className="landing-page">
+      <SeasonalAccent />
       <header className="site-header landing-header">
         <a
           className="mini-logo"

@@ -112,7 +112,7 @@ export function isMenuData(value: unknown): value is MenuData {
 export function normalizeMenu(menu: MenuData): MenuData {
   const savedProducts = menu.products.filter((product) => product.id !== 'pastor' && product.id !== 'carnitas');
   const defaultsById = new Map(defaultMenu.products.map((product) => [product.id, product]));
-  const products = savedProducts.map((product) => {
+  const products: Product[] = savedProducts.map((product): Product => {
     const catalogProduct = defaultsById.get(product.id);
     const useTrayImage = Boolean(catalogProduct && product.service === 'cup' && legacyCupImages.has(product.image));
     const isSpecialty = product.section === 'specialty' && product.description.toLowerCase().includes('salsa');
