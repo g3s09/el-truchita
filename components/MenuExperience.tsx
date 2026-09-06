@@ -140,6 +140,7 @@ export default function MenuExperience() {
   const [addedCartMessage, setAddedCartMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(sendingMessages[0]);
   const [maicitoAction, setMaicitoAction] = useState<MaicitoAction>('idle');
+  const [showCompanion, setShowCompanion] = useState(true);
   const panelRail = useRef<HTMLDivElement>(null);
   const maicitoTimer = useRef<number | undefined>(undefined);
 
@@ -172,6 +173,20 @@ export default function MenuExperience() {
     updateStatus();
     const timer = window.setInterval(updateStatus, 60000);
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const syncCompanion = () => {
+      const contact = document.getElementById('contacto');
+      setShowCompanion(!contact || contact.getBoundingClientRect().top > window.innerHeight * .62);
+    };
+    syncCompanion();
+    window.addEventListener('scroll', syncCompanion, { passive: true });
+    window.addEventListener('resize', syncCompanion);
+    return () => {
+      window.removeEventListener('scroll', syncCompanion);
+      window.removeEventListener('resize', syncCompanion);
+    };
   }, []);
 
   useEffect(() => {
@@ -312,7 +327,7 @@ export default function MenuExperience() {
       <nav aria-label="Navegación principal"><a href="/">INICIO</a><a href="#menu">MENÚ</a><a href="#contacto">A DOMICILIO</a></nav>
       <button className="header-order" type="button" onClick={openCart}>MI PEDIDO <i className={cart.length ? 'cart-dot active' : 'cart-dot'} /></button>
     </header>
-    <div className={'maicito-roamer is-' + maicitoAction} aria-hidden="true"><img src={maicitoAction === 'guide' ? '/maicito-truchita-guide.png' : '/maicito-truchita-free.png'} alt="" /><i>✦</i><i>✦</i><i>✦</i></div>
+    <aside className={'maicito-companion ' + (showCompanion && modal === 'none' ? 'is-visible' : '')} aria-label="Acceso rápido a mi pedido"><div className={'maicito-roamer is-' + maicitoAction} aria-hidden="true"><img src={maicitoAction === 'guide' ? '/maicito-truchita-guide.png' : '/maicito-truchita-free.png'} alt="" /><i>✦</i><i>✦</i><i>✦</i></div><button className="floating-order" type="button" onClick={openCart} aria-label="Abrir mi pedido"><span>MI PEDIDO</span><strong>{cart.length || '0'}</strong><i className={cart.length ? 'cart-dot active' : 'cart-dot'} /></button></aside>
 
     <section className="menu menu-only" id="menu" aria-labelledby="menu-title">
       <div className="menu-lead">
@@ -346,8 +361,6 @@ export default function MenuExperience() {
 
     <section className="contact" id="contacto"><div><p className="section-kicker">CUANDO EL ANTOJO PEGA</p><h2>SOLO A<br /><em>DOMICILIO.</em></h2></div><div className="contact-copy"><p>Entregamos en Zacapoaxtla, Puebla.</p><dl className="hours"><div><dt>DOMINGO A VIERNES</dt><dd>6:30 P. M. — 12:30 A. M.</dd></div><div><dt>SÁBADO</dt><dd>CERRADO</dd></div></dl><a href={'https://wa.me/' + WHATSAPP_BUSINESS_NUMBER} target="_blank" rel="noreferrer">PEDIR POR WHATSAPP <span>↗</span></a></div></section>
     <footer><div className="mini-logo"><span>ESQUITES</span><strong>EL TRUCHITA</strong></div><p>SOLO A DOMICILIO · DOM–VIE 6:30 P. M. — 12:30 A. M.</p><button type="button" onClick={openCart}>MI PEDIDO <i className={cart.length ? 'cart-dot active' : 'cart-dot'} /></button></footer>
-    <button className="floating-order" type="button" onClick={openCart} aria-label="Abrir mi pedido"><span>MI PEDIDO</span><strong>{cart.length || '0'}</strong><i className={cart.length ? 'cart-dot active' : 'cart-dot'} /></button>
-
     {modal !== 'none' && <div className="modal-backdrop" onMouseDown={() => modal !== 'sending' && setModal('none')}><section className={'order-modal ' + modal} role="dialog" aria-modal="true" aria-label="Mi pedido" onMouseDown={(event) => event.stopPropagation()}>
       {modal !== 'sending' && <button className="close-modal" type="button" onClick={() => setModal('none')} aria-label="Cerrar">×</button>}
       {modal === 'customize' && activeProduct && <Customizer activeProduct={activeProduct} activeBasePrice={activeBasePrice} activePrice={activePrice} preparation={preparation} mayo={mayo} queso={queso} setMayo={setMayo} setQueso={setQueso} snackFlavor={snackFlavor} setSnackFlavor={setSnackFlavor} bagFilling={bagFilling} setBagFilling={setBagFilling} bagFillings={bagFillings} availableExtras={availableExtras} selectedExtraIds={selectedExtraIds} toggleExtra={toggleExtra} note={note} setNote={setNote} onCharcoalBet={charcoalBet} onAdd={addToCart} />}
