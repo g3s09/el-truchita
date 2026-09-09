@@ -553,7 +553,7 @@ export default function MenuExperience() {
     if (!noticeQueue.length) return;
     noticeTimer.current = window.setTimeout(
       () => setNoticeQueue((queue) => queue.slice(1)),
-      4800,
+      noticeQueue[0]?.action ? 7000 : 4800,
     );
     return () => window.clearTimeout(noticeTimer.current);
   }, [noticeQueue]);
