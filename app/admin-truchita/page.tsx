@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import {
   defaultMenu,
   ExtraOption,
@@ -8,6 +8,14 @@ import {
   MenuSection,
   Product,
 } from "@/lib/menu";
+import {
+  defaultSeasonalSettings,
+  isSeasonalSettings,
+  SeasonId,
+  seasonDefinitions,
+  SeasonalSettings,
+  SEASON_PREVIEW_STORAGE_KEY,
+} from "@/lib/seasonal";
 
 const usernameDefault = "truchita-admin";
 
@@ -303,6 +311,7 @@ export default function AdminTruchita() {
             </button>
           </div>
         </div>
+        <SeasonAdminPanel username={username} password={password} />
         <AdminProductSection
           title="LOS TRADICIONALES"
           products={traditional}
@@ -458,6 +467,146 @@ export default function AdminTruchita() {
         </section>
       </div>
     </main>
+  );
+}
+
+function SeasonAdminPanel({
+  username,
+  password,
+}: {
+  username: string;
+  password: string;
+}) {
+  const [settings, setSettings] = useState<SeasonalSettings>(
+    defaultSeasonalSettings,
+  );
+  const [preview, setPreview] = useState<"auto" | SeasonId>("auto");
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(SEASON_PREVIEW_STORAGE_KEY);
+    if (saved && saved !== "auto") setPreview(saved as SeasonId);
+    fetch("/api/admin/seasonal", {
+      headers: headerFor(username, password),
+      cache: "no-store",
+    })
+      .then((response) => response.json())
+      .then((data: unknown) => {
+        if (isSeasonalSettings(data)) setSettings(data);
+      })
+      .catch(() => setMessage("No se pudo cargar la configuración de temporadas."));
+  }, [username, password]);
+
+  const setPreviewMode = (value: "auto" | SeasonId) => {
+    setPreview(value);
+    localStorage.setItem(SEASON_PREVIEW_STORAGE_KEY, value);
+    setMessage(
+      value === "auto"
+        ? "Vista previa en automático."
+        : "Vista previa activa en este navegador. Abre el sitio para verla.",
+    );
+  };
+
+  const toggleSeason = (id: SeasonId) =>
+    setSettings((current) => ({
+      enabled: { ...current.enabled, [id]: !current.enabled[id] },
+      active: current.active,
+    }));
+
+  const toggleAllSeasons = () =>
+    setSettings((current) => ({ ...current, active: !current.active }));
+
+  const save = async () => {
+    setSaving(true);
+    setMessage("Guardando temporadas…");
+    const response = await fetch("/api/admin/seasonal", {
+      method: "PUT",
+      headers: {
+        ...headerFor(username, password),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(settings),
+    });
+    const payload: unknown = await response.json().catch(() => ({}));
+    setSaving(false);
+    setMessage(
+      response.ok
+        ? "Temporadas actualizadas para el sitio público."
+        : payload && typeof payload === "object" && "message" in payload
+          ? String(payload.message)
+          : "No se pudieron guardar las temporadas.",
+    );
+  };
+
+  return (
+    <section className="admin-section seasonal-admin">
+      <div className="admin-section-head">
+        <div>
+          <span>EDICIONES AUTOMÁTICAS</span>
+          <h2>TEMPORADAS</h2>
+        </div>
+        <button className="admin-button" type="button" onClick={save} disabled={saving}>
+          {saving ? "GUARDANDO…" : "GUARDAR TEMPORADAS"}
+        </button>
+      </div>
+      <p className="seasonal-admin-copy">
+        Activa o pausa una edición sin borrar sus ilustraciones. La vista previa
+        sólo funciona en este navegador y no aparece a los clientes.
+      </p>
+      <label className="seasonal-master-switch">
+        <input
+          type="checkbox"
+          checked={settings.active}
+          onChange={toggleAllSeasons}
+        />
+        <span className="seasonal-admin-toggle" />
+        <span>
+          <strong>VESTIMENTA ESTACIONAL DEL SITIO</strong>
+          <small>
+            {settings.active
+              ? "ACTIVA: SE APLICARÁN LAS FECHAS Y EDICIONES HABILITADAS"
+              : "PAUSADA: EL SITIO VUELVE A SU APARIENCIA BASE"}
+          </small>
+        </span>
+      </label>
+      <label className="admin-field seasonal-preview-control">
+        <span>VISTA PREVIA PRIVADA</span>
+        <select
+          value={preview}
+          onChange={(event) => setPreviewMode(event.target.value as "auto" | SeasonId)}
+        >
+          <option value="auto">AUTOMÁTICA SEGÚN FECHA</option>
+          {seasonDefinitions.map((season) => (
+            <option key={season.id} value={season.id}>
+              {season.name.toUpperCase()}
+            </option>
+          ))}
+        </select>
+      </label>
+      <a className="seasonal-preview-link" href="/" target="_blank" rel="noreferrer">
+        ABRIR SITIO CON ESTA VISTA PREVIA ↗
+      </a>
+      <div className="seasonal-admin-grid">
+        {seasonDefinitions.map((season) => (
+          <label className="seasonal-admin-card" key={season.id}>
+            <input
+              type="checkbox"
+              checked={settings.enabled[season.id]}
+              onChange={() => toggleSeason(season.id)}
+            />
+            <span className="seasonal-admin-toggle" />
+            <div>
+              <strong>{season.name}</strong>
+              <small>
+                {season.intensity === "edition" ? "EDICIÓN COMPLETA" : "ACENTO DISCRETO"}
+              </small>
+            </div>
+          </label>
+        ))}
+      </div>
+      {message && <p className="admin-message">{message}</p>}
+    </section>
   );
 }
 

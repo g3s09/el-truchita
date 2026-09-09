@@ -1,61 +1,114 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
+import {
+  activeSeason,
+  defaultSeasonalSettings,
+  isSeasonalSettings,
+  SeasonDefinition,
+  SeasonId,
+  SeasonalSettings,
+  SEASON_PREVIEW_STORAGE_KEY,
+} from "@/lib/seasonal";
 
-type Season = "patrias" | "muertos" | "navidad";
-
-function currentSeason(): Season | null {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Mexico_City",
-    month: "numeric",
-    day: "numeric",
-  }).formatToParts(new Date());
-  const value = (kind: string) =>
-    Number(parts.find((part) => part.type === kind)?.value ?? 0);
-  const month = value("month");
-  const day = value("day");
-
-  if (month === 9) return "patrias";
-  if ((month === 10 && day >= 24) || (month === 11 && day <= 3))
-    return "muertos";
-  if (month === 12 || (month === 1 && day <= 6)) return "navidad";
-  return null;
+function readPreview(): SeasonId | null {
+  const value = localStorage.getItem(SEASON_PREVIEW_STORAGE_KEY);
+  return value && value !== "auto" ? (value as SeasonId) : null;
 }
 
-const ornaments: Record<Season, string[]> = {
-  patrias: ["✦", "♫", "✦", "⚑", "✦", "♫", "✦"],
-  muertos: ["🌼", "✦", "☠", "✦", "🕯", "✦", "🌼"],
-  navidad: ["✦", "●", "✦", "✦", "●", "✦", "✦"],
-};
+function phraseFor(season: SeasonDefinition) {
+  return season.phrases[Math.floor(Math.random() * season.phrases.length)] ?? "";
+}
 
-/** Viste el sitio únicamente durante fechas mexicanas y se retira por sí solo. */
+/** Renderiza una edición temporal sin bloquear el pedido ni el contenido. */
 export default function SeasonalAccent() {
-  const [season, setSeason] = useState<Season | null>(null);
+  const [settings, setSettings] = useState<SeasonalSettings>(
+    defaultSeasonalSettings,
+  );
+  const [preview, setPreview] = useState<SeasonId | null>(null);
+  const [season, setSeason] = useState<SeasonDefinition | null>(null);
+  const [phrase, setPhrase] = useState("");
 
   useEffect(() => {
-    const syncSeason = () => setSeason(currentSeason());
-    syncSeason();
-    const timer = window.setInterval(syncSeason, 30 * 60 * 1000);
-    return () => window.clearInterval(timer);
+    let active = true;
+    setPreview(readPreview());
+    fetch("/api/seasonal", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((data: unknown) => {
+        if (active && isSeasonalSettings(data)) setSettings(data);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
-    if (season) document.documentElement.dataset.season = season;
-    else delete document.documentElement.dataset.season;
+    const sync = () => setSeason(activeSeason(undefined, settings, preview));
+    sync();
+    const interval = window.setInterval(sync, 30 * 60 * 1000);
+    const storage = (event: StorageEvent) => {
+      if (event.key === SEASON_PREVIEW_STORAGE_KEY) setPreview(readPreview());
+    };
+    window.addEventListener("storage", storage);
     return () => {
-      delete document.documentElement.dataset.season;
+      window.clearInterval(interval);
+      window.removeEventListener("storage", storage);
+    };
+  }, [preview, settings]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (season) {
+      root.dataset.season = season.id;
+      root.style.setProperty("--season-accent", season.palette.accent);
+      root.style.setProperty("--season-secondary", season.palette.secondary);
+      root.style.setProperty("--season-glow", season.palette.glow);
+      const phraseKey = `truchita-seasonal-phrase-${season.id}`;
+      const wasShown = window.sessionStorage.getItem(phraseKey);
+      const nextPhrase = wasShown ? "" : phraseFor(season);
+      setPhrase(nextPhrase);
+      if (nextPhrase) window.sessionStorage.setItem(phraseKey, "1");
+    } else {
+      delete root.dataset.season;
+      setPhrase("");
+    }
+    return () => {
+      delete root.dataset.season;
+      root.style.removeProperty("--season-accent");
+      root.style.removeProperty("--season-secondary");
+      root.style.removeProperty("--season-glow");
     };
   }, [season]);
 
   if (!season) return null;
 
   return (
-    <div className={"seasonal-dress seasonal-" + season} aria-hidden="true">
-      <div className="seasonal-garland">
-        {ornaments[season].map((ornament, index) => (
-          <i key={index}>{ornament}</i>
-        ))}
-      </div>
+    <div
+      className={
+        "seasonal-dress seasonal-" + season.id + " intensity-" + season.intensity
+      }
+      data-intensity={season.intensity}
+      style={
+        {
+          "--season-accent": season.palette.accent,
+          "--season-secondary": season.palette.secondary,
+          "--season-glow": season.palette.glow,
+        } as CSSProperties
+      }
+      aria-hidden="true"
+    >
+      <span className="seasonal-ribbon" />
+      {season.asset && (
+        <img
+          className={"seasonal-art " + (season.placement ?? "top-right")}
+          src={season.asset}
+          alt=""
+          loading="lazy"
+        />
+      )}
+      {phrase ? <span className="seasonal-phrase">{phrase}</span> : null}
     </div>
   );
 }
