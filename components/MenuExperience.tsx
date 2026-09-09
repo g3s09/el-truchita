@@ -41,8 +41,19 @@ type CartItem = {
   bagFilling?: Product;
   preparation: Preparation;
 };
-type Modal = "none" | "customize" | "cart" | "checkout" | "sending";
+type Modal =
+  | "none"
+  | "customize"
+  | "cart"
+  | "confirm-empty"
+  | "checkout"
+  | "sending";
 type MaicitoAction = "idle" | "guide" | "celebrate";
+type Notice = {
+  id: number;
+  message: string;
+  action?: { label: string; onPress: () => void };
+};
 type CustomerDetails = {
   name: string;
   phone: string;
@@ -139,38 +150,62 @@ const cornSpiceLimit = (product?: Product) => {
 };
 
 const emptyCartMessages = [
-  "Tu carrito está más vacío que tus ganas de cocinar.",
-  "No te vayas así… el carbón ya se ilusionó.",
-  "Mirar el menú no llena el alma. Bueno, tampoco el estómago.",
-  "Hay un espacio vacío aquí. Igual que en tu corazón después de oler elote.",
-  "No dejes a Maicito hablando solo; el carbón no da terapia.",
-  "Tu antojo está en visto. Y el carrito también.",
-  "Puedes seguir fingiendo que no tienes hambre; el carrito no te cree.",
-  "Cero antojos, cero problemas… mentira, el hambre vuelve.",
+  "Tu carrito está más vacío que la promesa de «solo vengo a ver». ",
+  "No te vayas así: el carbón ya se emocionó y tú otra vez huyendo del compromiso.",
+  "Mirar el menú no llena el alma. Y claramente tampoco te llena la cena.",
+  "Hay un espacio vacío aquí. Igual que tu plan para resolver el hambre.",
+  "No dejes a Maicito hablando solo; el carbón da sabor, no terapia.",
+  "Tu antojo está en visto. El carrito ya entendió cómo te tratan.",
+  "Puedes fingir que no tienes hambre; pero tu estómago ya filtró el chat.",
+  "Cero antojos, cero problemas… mentira: el hambre siempre cobra intereses.",
 ];
 const addedCartMessages = [
-  "Excelente. Una decisión menos cuestionable que muchas otras.",
-  "Tu antojo ya tiene futuro. A diferencia de algunos planes.",
-  "El carbón aprueba esta compra impulsiva.",
-  "Una compra impulsiva, pero con mejor destino que tus últimos mensajes.",
-  "Bien: ya hiciste algo útil con el día.",
-  "Tu pedido crece; tus pendientes pueden esperar cinco minutos.",
-  "Esto no arregla todo, pero sí arregla la cena.",
-  "Elote añadido. Crisis existencial pospuesta.",
+  "Una decisión cuestionable. Pero deliciosa.",
+  "Tu fuerza de voluntad presentó su renuncia sin avisar.",
+  "El carbón aprueba esta compra impulsiva; tus pendientes no tienen voto.",
+  "Otra cosa al carrito. Tu plan de comer sano acaba de pedir permiso para morir.",
+  "Bien: por fin hiciste algo útil con el día.",
+  "Tu pedido crece; la dieta ya está preparando su comunicado oficial.",
+  "Esto no arregla tu vida, pero sí evita que cenes triste.",
+  "Elote añadido. Crisis existencial: pospuesta, no resuelta.",
+];
+const removedCartMessages = [
+  "No todos los amores duran. Este se fue sin pedir limón.",
+  "Eliminado. Tu fuerza de voluntad acaba de ganar una batalla minúscula.",
+  "Se fue de la charola, pero el antojo ya guardó tu ubicación.",
+  "Una despedida innecesaria, pero aquí respetamos tus malas decisiones.",
+  "Adiós, campeón. El carbón no preguntará por qué lo dejaste.",
+];
+const clearedCartMessages = [
+  "Se fue el esquite. Se quedó el vacío. Muy dramático todo.",
+  "Carrito vacío. La brasa ya está redactando su carta de decepción.",
+  "Borraste el antojo. El hambre tomará nota y volverá con refuerzos.",
+  "Todo limpio. Igual que tu conciencia durante unos siete minutos.",
+  "El carrito quedó en terapia. Aún puedes deshacer esto.",
+];
+const editedCartMessages = [
+  "Ajustado. Porque hasta el antojo merece una segunda versión.",
+  "Cambio guardado. La charola ya está al tanto del chisme.",
+  "Editado con éxito: ahora sí quedó como lo vas a presumir.",
+];
+const arcadeMessages = [
+  "COMBO DESBLOQUEADO: tu grupo de apoyo ya necesita cucharas.",
+  "RACHA DE ANTOJO ACTIVADA. El carbón te reconoce como cliente de riesgo.",
+  "MULTIJUGADOR DETECTADO. Nadie sale de esta cena sin mancharse de chile.",
 ];
 const sendingMessages = [
-  "Maicito va en camino, porque tú ya hiciste suficiente por hoy.",
-  "Tu pedido salió disparado; nuestras responsabilidades no tanto.",
-  "Más rápido que el arrepentimiento después del primer bocado.",
-  "Va directo a WhatsApp, donde empieza la verdadera novela.",
-  "Cruza el internet con más ganas que tú cruzando por el elote.",
-  "Mensaje enviado: ahora solo falta que el universo no se meta.",
-  "Rápido, caliente y sin preguntar por tus decisiones.",
-  "Hacia WhatsApp, antes de que cambies de opinión.",
-  "No te lo goces a solas: mándale la página a quien siempre termina robando cucharadas.",
-  "Comparte el antojo; es más sano que compartir indirectas y mucho más rico.",
-  "Tu pedido va a WhatsApp. Tu amistad que dijo «no tengo hambre» ya debería ir enterándose.",
-  "Elote enviado. Si lo compartes, Maicito no tendrá que fingir que no le dolió.",
+  "El maíz ha sido notificado de su destino. Ya no hay marcha atrás.",
+  "Tu pedido salió disparado; tus responsabilidades siguen estacionadas.",
+  "Más rápido que el arrepentimiento después de decir «solo uno». ",
+  "Va directo a WhatsApp, donde empieza la verdadera novela del antojo.",
+  "Cruza el internet con más decisión que tú cuando toca responder mensajes.",
+  "Mensaje enviado: ahora solo falta que el universo no se ponga creativo.",
+  "Rápido, caliente y sin pedirte explicaciones por tus decisiones.",
+  "Hacia WhatsApp, antes de que te arrepientas y cenes cereal otra vez.",
+  "No te lo goces a solas: avísale a quien siempre termina robando cucharadas.",
+  "Comparte el antojo; es más sano que compartir indirectas y bastante más rico.",
+  "Tu pedido va a WhatsApp. La amistad que dijo «no tengo hambre» ya fue exhibida.",
+  "Elote enviado. Si lo compartes, Maicito dejará de tomárselo personal.",
 ];
 
 const panelDetails: Array<{
@@ -396,8 +431,15 @@ export default function MenuExperience() {
   const [showCompanion, setShowCompanion] = useState(true);
   const [soundOn, setSoundOn] = useState(true);
   const [soundPreferenceLoaded, setSoundPreferenceLoaded] = useState(false);
+  const [editingCartId, setEditingCartId] = useState<string | null>(null);
+  const [noticeQueue, setNoticeQueue] = useState<Notice[]>([]);
+  const [cartFlight, setCartFlight] = useState<Product | null>(null);
+  const [cartPulse, setCartPulse] = useState(false);
   const panelRail = useRef<HTMLDivElement>(null);
   const maicitoTimer = useRef<number | undefined>(undefined);
+  const noticeTimer = useRef<number | undefined>(undefined);
+  const cartFlightTimer = useRef<number | undefined>(undefined);
+  const addLock = useRef(false);
   const audioContext = useRef<AudioContext | null>(null);
 
   useEffect(() => {
@@ -504,6 +546,23 @@ export default function MenuExperience() {
 
   useEffect(() => () => window.clearTimeout(maicitoTimer.current), []);
 
+  useEffect(() => {
+    if (!noticeQueue.length) return;
+    noticeTimer.current = window.setTimeout(
+      () => setNoticeQueue((queue) => queue.slice(1)),
+      3900,
+    );
+    return () => window.clearTimeout(noticeTimer.current);
+  }, [noticeQueue]);
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(noticeTimer.current);
+      window.clearTimeout(cartFlightTimer.current);
+    },
+    [],
+  );
+
   const availableProducts = useMemo(
     () => menu.products.filter((product) => product.available !== false),
     [menu.products],
@@ -581,6 +640,31 @@ export default function MenuExperience() {
     );
   };
 
+  const notify = (
+    key: string,
+    messages: string[],
+    action?: Notice["action"],
+  ) => {
+    const notice = {
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      message: nextMaicitoMessage(key, messages),
+      action,
+    };
+    setNoticeQueue((queue) => [...queue, notice]);
+    return notice.message;
+  };
+
+  const celebrateCart = (product: Product) => {
+    window.clearTimeout(cartFlightTimer.current);
+    setCartFlight(product);
+    setCartPulse(false);
+    window.requestAnimationFrame(() => setCartPulse(true));
+    cartFlightTimer.current = window.setTimeout(() => {
+      setCartFlight(null);
+      setCartPulse(false);
+    }, 720);
+  };
+
   const playSound = (effect: "select" | "open" | "add", force = false) => {
     if (!soundOn && !force) return;
     try {
@@ -652,6 +736,7 @@ export default function MenuExperience() {
   const openCustomizer = (product: Product, options: CustomizeOptions = {}) => {
     playSound("open");
     triggerMaicito("guide");
+    setEditingCartId(null);
     setActiveProduct(product);
     setMayo(true);
     setQueso(true);
@@ -666,6 +751,27 @@ export default function MenuExperience() {
     setBagFilling(options.bagFilling ?? bagFillings[0]);
     setPreparation(options.preparation ?? "standard");
     setNote("");
+    setModal("customize");
+  };
+
+  const editCartItem = (item: CartItem) => {
+    playSound("open");
+    triggerMaicito("guide");
+    setEditingCartId(item.id);
+    setActiveProduct(item.product);
+    setMayo(item.mayo);
+    setQueso(item.queso);
+    setSelectedExtraIds(item.extras.map((extra) => extra.id));
+    setSpice(item.spice ?? spiceOptions[0]);
+    setSelectedSpiceIds(
+      item.product.id === "elote-con-todo"
+        ? spicyOptions.map((option) => option.id)
+        : item.spices?.map((option) => option.id) ?? [],
+    );
+    setSnackFlavor(item.snackFlavor ?? snackFlavors[0]);
+    setBagFilling(item.bagFilling ?? bagFillings[0]);
+    setPreparation(item.preparation);
+    setNote(item.note);
     setModal("customize");
   };
 
@@ -716,36 +822,53 @@ export default function MenuExperience() {
 
   const addToCart = () => {
     if (!activeProduct) return;
+    if (addLock.current) return;
     const spiceLimit = cornSpiceLimit(activeProduct);
     if (spiceLimit && selectedCornSpices.length !== spiceLimit) return;
+    addLock.current = true;
+    window.setTimeout(() => {
+      addLock.current = false;
+    }, 320);
     playSound("add");
     triggerMaicito("celebrate");
-    setCart((items) => [
-      ...items,
-      {
-        id: activeProduct.id + "-" + Date.now(),
-        product: activeProduct,
-        mayo,
-        queso,
-        extras: selectedExtras,
-        note: note.trim(),
-        spice:
-          activeProduct.service === "corn" || spice.id === "sin-picante"
-            ? undefined
-            : spice,
-        spices:
-          activeProduct.service === "corn" && selectedCornSpices.length
-            ? selectedCornSpices
-            : undefined,
-        snackFlavor: activeProduct.service === "bag" ? snackFlavor : undefined,
-        bagFilling: activeProduct.service === "bag" ? bagFilling : undefined,
-        preparation,
-      },
-    ]);
-    setAddedCartMessage(
-      nextMaicitoMessage("truchita-added-cart-phrase", addedCartMessages),
+    const item: CartItem = {
+      id: editingCartId ?? activeProduct.id + "-" + Date.now(),
+      product: activeProduct,
+      mayo,
+      queso,
+      extras: selectedExtras,
+      note: note.trim(),
+      spice:
+        activeProduct.service === "corn" || spice.id === "sin-picante"
+          ? undefined
+          : spice,
+      spices:
+        activeProduct.service === "corn" && selectedCornSpices.length
+          ? selectedCornSpices
+          : undefined,
+      snackFlavor: activeProduct.service === "bag" ? snackFlavor : undefined,
+      bagFilling: activeProduct.service === "bag" ? bagFilling : undefined,
+      preparation,
+    };
+    const wasEditing = Boolean(editingCartId);
+    setCart((items) =>
+      editingCartId
+        ? items.map((current) => (current.id === editingCartId ? item : current))
+        : [...items, item],
     );
-    setModal("cart");
+    const message = notify(
+      wasEditing ? "truchita-edited-cart-phrase" : "truchita-added-cart-phrase",
+      wasEditing ? editedCartMessages : addedCartMessages,
+    );
+    setAddedCartMessage(message);
+    celebrateCart(activeProduct);
+    if (!wasEditing && cart.length + 1 >= 4)
+      window.setTimeout(
+        () => notify("truchita-arcade-phrase", arcadeMessages),
+        300,
+      );
+    setEditingCartId(null);
+    window.setTimeout(() => setModal("cart"), 230);
   };
 
   const whatsappUrl = () => {
@@ -848,6 +971,31 @@ export default function MenuExperience() {
     setModal("cart");
   };
 
+  const removeCartItem = (id: string) => {
+    setCart((items) => items.filter((item) => item.id !== id));
+    notify("truchita-removed-cart-phrase", removedCartMessages);
+  };
+
+  const clearCart = () => {
+    const previousCart = cart;
+    setCart([]);
+    setReference("");
+    setAddedCartMessage("");
+    setEmptyCartMessage(
+      nextMaicitoMessage("truchita-empty-cart-phrase", emptyCartMessages),
+    );
+    notify("truchita-cleared-cart-phrase", clearedCartMessages, {
+      label: "DESHACER",
+      onPress: () => {
+        setCart(previousCart);
+        notify("truchita-undo-cart-phrase", [
+          "Regresó todo. El antojo sigue vivo y más terco que antes.",
+        ]);
+      },
+    });
+    setModal("cart");
+  };
+
   const currentIndex =
     String(activePanel + 1).padStart(2, "0") +
     " / " +
@@ -867,7 +1015,11 @@ export default function MenuExperience() {
           <a href="#menu">MENÚ</a>
           <a href="#contacto">A DOMICILIO</a>
         </nav>
-        <button className="header-order" type="button" onClick={openCart}>
+        <button
+          className={cartPulse ? "header-order cart-pulse" : "header-order"}
+          type="button"
+          onClick={openCart}
+        >
           MI PEDIDO{" "}
           <i className={cart.length ? "cart-dot active" : "cart-dot"} />
         </button>
@@ -896,12 +1048,12 @@ export default function MenuExperience() {
           <i>✦</i>
         </div>
         <button
-          className="floating-order"
+          className={cartPulse ? "floating-order cart-pulse" : "floating-order"}
           type="button"
           onClick={openCart}
           aria-label="Abrir mi pedido"
         >
-          <span>MI PEDIDO</span>
+          <span>MI PEDIDO <small>{money(total)}</small></span>
           <strong>{cart.length || "0"}</strong>
           <i className={cart.length ? "cart-dot active" : "cart-dot"} />
         </button>
@@ -1136,6 +1288,18 @@ export default function MenuExperience() {
           <i className={cart.length ? "cart-dot active" : "cart-dot"} />
         </button>
       </footer>
+      {cartFlight && (
+        <span className="cart-flight" aria-hidden="true">
+          <img src={productImageForDisplay(cartFlight)} alt="" />
+          <i>✦</i><i>✦</i>
+        </span>
+      )}
+      {noticeQueue[0] && (
+        <TruchitaNotice
+          notice={noticeQueue[0]}
+          onClose={() => setNoticeQueue((queue) => queue.slice(1))}
+        />
+      )}
       {modal !== "none" && (
         <div
           className="modal-backdrop"
@@ -1184,6 +1348,7 @@ export default function MenuExperience() {
                 note={note}
                 setNote={setNote}
                 onAdd={addToCart}
+                editing={Boolean(editingCartId)}
               />
             )}
             {modal === "cart" && (
@@ -1196,20 +1361,9 @@ export default function MenuExperience() {
                 emptyMessage={emptyCartMessage}
                 addedMessage={addedCartMessage}
                 suggestedPanel={panelDetails[nextPanel]}
-                onRemove={(id) =>
-                  setCart((items) => items.filter((item) => item.id !== id))
-                }
-                onEmpty={() => {
-                  setCart([]);
-                  setReference("");
-                  setAddedCartMessage("");
-                  setEmptyCartMessage(
-                    nextMaicitoMessage(
-                      "truchita-empty-cart-phrase",
-                      emptyCartMessages,
-                    ),
-                  );
-                }}
+                onRemove={removeCartItem}
+                onEdit={editCartItem}
+                onEmpty={() => setModal("confirm-empty")}
                 onContinue={closeCartToMenu}
                 onExplore={() => {
                   setModal("none");
@@ -1219,6 +1373,14 @@ export default function MenuExperience() {
                   setReference((current) => current || orderReference());
                   setModal("checkout");
                 }}
+              />
+            )}
+            {modal === "confirm-empty" && (
+              <ClearCartConfirm
+                count={cart.length}
+                total={total}
+                onCancel={() => setModal("cart")}
+                onConfirm={clearCart}
               />
             )}
             {modal === "checkout" && (
@@ -1258,6 +1420,74 @@ export default function MenuExperience() {
   );
 }
 
+function TruchitaNotice({
+  notice,
+  onClose,
+}: {
+  notice: Notice;
+  onClose: () => void;
+}) {
+  return (
+    <aside className="truchita-notice" role="status" aria-live="polite">
+      <img src="/maicito-truchita-free.png" alt="" aria-hidden="true" />
+      <div>
+        <p>EL TRUCHITA DICE</p>
+        <strong>{notice.message}</strong>
+        {notice.action && (
+          <button
+            type="button"
+            onClick={() => {
+              notice.action?.onPress();
+              onClose();
+            }}
+          >
+            {notice.action.label} ↗
+          </button>
+        )}
+      </div>
+      <button
+        className="notice-close"
+        type="button"
+        onClick={onClose}
+        aria-label="Cerrar mensaje"
+      >
+        ×
+      </button>
+    </aside>
+  );
+}
+
+function ClearCartConfirm({
+  count,
+  total,
+  onCancel,
+  onConfirm,
+}: {
+  count: number;
+  total: number;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="clear-cart-confirm">
+      <p className="modal-kicker">ÚLTIMA OPORTUNIDAD PARA ARREPENTIRSE</p>
+      <h2>¿DE VERDAD VAMOS A TERMINAR ASÍ?</h2>
+      <p>
+        Vas a soltar {count} preparación{count === 1 ? "" : "es"} y {money(total)}
+        &nbsp;de antojo. El carbón no juzga, pero sí recuerda.
+      </p>
+      <div className="clear-cart-actions">
+        <button className="secondary-action" type="button" onClick={onCancel}>
+          NO, YO SIGO AQUÍ
+        </button>
+        <button className="wide-action clear-confirm" type="button" onClick={onConfirm}>
+          SÍ, VACIAR SELECCIÓN <span>×</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Customizer({
   activeProduct,
   activeBasePrice,
@@ -1283,6 +1513,7 @@ function Customizer({
   note,
   setNote,
   onAdd,
+  editing,
 }: {
   activeProduct: Product;
   activeBasePrice: number;
@@ -1308,6 +1539,7 @@ function Customizer({
   note: string;
   setNote: (value: string) => void;
   onAdd: () => void;
+  editing: boolean;
 }) {
   const carbonOnly = preparation === "muy-mexicano";
   const cornSpiceSlots = cornSpiceLimit(activeProduct);
@@ -1609,7 +1841,7 @@ function Customizer({
         disabled={!cornSpicesComplete}
         onClick={onAdd}
       >
-        AGREGAR A MI PEDIDO <span>{money(activePrice)}</span>
+        {editing ? "ACTUALIZAR MI PEDIDO" : "AGREGAR A MI PEDIDO"} <span>{money(activePrice)}</span>
       </button>
     </>
   );
@@ -1688,6 +1920,7 @@ function CartView({
   addedMessage,
   suggestedPanel,
   onRemove,
+  onEdit,
   onEmpty,
   onContinue,
   onExplore,
@@ -1702,6 +1935,7 @@ function CartView({
   addedMessage: string;
   suggestedPanel: (typeof panelDetails)[number];
   onRemove: (id: string) => void;
+  onEdit: (item: CartItem) => void;
   onEmpty: () => void;
   onContinue: () => void;
   onExplore: () => void;
@@ -1758,6 +1992,15 @@ function CartView({
                 </div>
                 <b>{money(cartItemTotal(item))}</b>
                 <button
+                  className="cart-item-edit"
+                  type="button"
+                  onClick={() => onEdit(item)}
+                  aria-label={"Editar " + item.product.name}
+                >
+                  ✎
+                </button>
+                <button
+                  className="cart-item-remove"
                   type="button"
                   onClick={() => onRemove(item.id)}
                   aria-label={"Eliminar " + item.product.name}

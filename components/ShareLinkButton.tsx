@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const defaultShareText =
-  "🌽🔥 Pide tus esquites al carbón aquí, o te freseas. El antojo no se presume: se atiende en El Truchita.";
+  "🌽🔥 Pide tus esquites al carbón aquí, o te freseas. El antojo no se presume: se atiende antes de que termines cenando cereal.";
 
 export default function ShareLinkButton({
   label,

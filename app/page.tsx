@@ -7,18 +7,18 @@ import ShareLinkButton from "@/components/ShareLinkButton";
 import SeasonalAccent from "@/components/SeasonalAccent";
 
 const saturdayMessage =
-  "Te extraño, pronto nos veremos. Hoy me tocó sobrevivir a la uni.";
+  "Te extraño, pronto nos veremos. Hoy me tocó sobrevivir a la uni y tú a tus antojos.";
 const welcomeMessages = [
-  "El día ya te cobró caro. Mínimo cóbrale un esquite.",
-  "Tus problemas no se arreglan, pero con queso se ven menos graves.",
-  "Si todo se fue al carbón, que al menos tenga limón y chile.",
-  "Aquí no juzgamos tus decisiones; solo las servimos con mayonesa.",
-  "No podemos sanar tu vida, pero sí ponerle Doritos.",
-  "A esta hora, pedir esquites cuenta como autocuidado. Tu terapeuta no necesita saber.",
-  "Tu vida no tiene sazón, pero esto sí puede arreglar una parte.",
-  "El destino no existe; el antojo sí. Y viene con chile.",
-  "No prometemos respuestas, solo una charola que no te va a dejar en visto.",
-  "Si el día te dio la espalda, nosotros te damos queso.",
+  "El día ya te cobró caro. Mínimo cóbrale un esquite con intereses.",
+  "Tus problemas no se arreglan, pero con queso se ven menos vergonzosos.",
+  "Si todo se fue al carbón, que al menos tenga limón, chile y dignidad.",
+  "Aquí no juzgamos tus decisiones; solo las servimos con mayonesa extra.",
+  "No podemos sanar tu vida, pero sí taparla tantito con Doritos.",
+  "Pedir esquites cuenta como autocuidado. Tu terapeuta puede hacerse el sorprendido.",
+  "Tu vida quizá no tiene sazón, pero esta charola viene a negociar.",
+  "El destino no existe; el antojo sí. Y hoy trae chile del bueno.",
+  "No prometemos respuestas, solo una charola que no te deja en visto ni te pide espacio.",
+  "Si el día te dio la espalda, nosotros te damos queso y una razón para seguir fingiendo.",
 ];
 
 function randomWelcome() {
