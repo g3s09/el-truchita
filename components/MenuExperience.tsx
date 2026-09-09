@@ -435,11 +435,13 @@ export default function MenuExperience() {
   const [noticeQueue, setNoticeQueue] = useState<Notice[]>([]);
   const [cartFlight, setCartFlight] = useState<Product | null>(null);
   const [cartPulse, setCartPulse] = useState(false);
+  const [clearingCart, setClearingCart] = useState(false);
   const panelRail = useRef<HTMLDivElement>(null);
   const maicitoTimer = useRef<number | undefined>(undefined);
   const noticeTimer = useRef<number | undefined>(undefined);
   const cartFlightTimer = useRef<number | undefined>(undefined);
   const checkoutTimer = useRef<number | undefined>(undefined);
+  const clearCartTimer = useRef<number | undefined>(undefined);
   const addLock = useRef(false);
   const audioContext = useRef<AudioContext | null>(null);
 
@@ -561,6 +563,7 @@ export default function MenuExperience() {
       window.clearTimeout(noticeTimer.current);
       window.clearTimeout(cartFlightTimer.current);
       window.clearTimeout(checkoutTimer.current);
+      window.clearTimeout(clearCartTimer.current);
     },
     [],
   );
@@ -1005,23 +1008,30 @@ export default function MenuExperience() {
   };
 
   const clearCart = () => {
+    if (clearingCart) return;
     const previousCart = cart;
-    setCart([]);
-    setReference("");
-    setAddedCartMessage("");
-    setEmptyCartMessage(
-      nextMaicitoMessage("truchita-empty-cart-phrase", emptyCartMessages),
-    );
-    notify("truchita-cleared-cart-phrase", clearedCartMessages, {
-      label: "DESHACER",
-      onPress: () => {
-        setCart(previousCart);
-        notify("truchita-undo-cart-phrase", [
-          "Regresó todo. El antojo sigue vivo y más terco que antes.",
-        ]);
-      },
-    });
-    setModal("cart");
+    playSound("select");
+    setClearingCart(true);
+    window.clearTimeout(clearCartTimer.current);
+    clearCartTimer.current = window.setTimeout(() => {
+      setCart([]);
+      setReference("");
+      setAddedCartMessage("");
+      setEmptyCartMessage(
+        nextMaicitoMessage("truchita-empty-cart-phrase", emptyCartMessages),
+      );
+      setClearingCart(false);
+      notify("truchita-cleared-cart-phrase", clearedCartMessages, {
+        label: "DESHACER",
+        onPress: () => {
+          setCart(previousCart);
+          notify("truchita-undo-cart-phrase", [
+            "Regresó todo. El antojo sigue vivo y más terco que antes.",
+          ]);
+        },
+      });
+      setModal("cart");
+    }, 840);
   };
 
   const currentIndex =
@@ -1426,6 +1436,8 @@ export default function MenuExperience() {
               <ClearCartConfirm
                 count={cart.length}
                 total={total}
+                cart={cart}
+                isClearing={clearingCart}
                 onCancel={() => setModal("cart")}
                 onConfirm={clearCart}
               />
@@ -1519,14 +1531,22 @@ function TruchitaNotice({
 function ClearCartConfirm({
   count,
   total,
+  cart,
+  isClearing,
   onCancel,
   onConfirm,
 }: {
   count: number;
   total: number;
+  cart: CartItem[];
+  isClearing: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  if (isClearing) {
+    return <CartDumpAnimation cart={cart} />;
+  }
+
   return (
     <div className="clear-cart-confirm">
       <p className="modal-kicker">ÚLTIMA OPORTUNIDAD PARA ARREPENTIRSE</p>
@@ -1543,6 +1563,33 @@ function ClearCartConfirm({
           SÍ, VACIAR SELECCIÓN <span>×</span>
         </button>
       </div>
+    </div>
+  );
+}
+
+function CartDumpAnimation({ cart }: { cart: CartItem[] }) {
+  return (
+    <div className="cart-dump-state" aria-live="polite">
+      <p className="modal-kicker">APAGANDO EL ANTOJO</p>
+      <div className="cart-dump-stage" aria-hidden="true">
+        <div className="cart-dump-tray">
+          {cart.slice(0, 5).map((item, index) => (
+            <img
+              key={item.id}
+              src={productImageForDisplay(item.product)}
+              alt=""
+              style={{ "--dump-index": index } as CSSProperties}
+            />
+          ))}
+        </div>
+        <div className="cart-dump-bin">
+          <i>✦</i>
+          <strong>CARBÓN</strong>
+        </div>
+        <span className="cart-dump-ashes"><i /><i /><i /><i /></span>
+      </div>
+      <h2>LA CHAROLA SE VACÍA.</h2>
+      <p>El carbón se queda con el drama; aún podrás deshacerlo enseguida.</p>
     </div>
   );
 }
