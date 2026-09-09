@@ -553,7 +553,7 @@ export default function MenuExperience() {
     if (!noticeQueue.length) return;
     noticeTimer.current = window.setTimeout(
       () => setNoticeQueue((queue) => queue.slice(1)),
-      2400,
+      4800,
     );
     return () => window.clearTimeout(noticeTimer.current);
   }, [noticeQueue]);
@@ -1321,6 +1321,22 @@ export default function MenuExperience() {
           <SocialLinks />
         </div>
       </section>
+      <section className="last-ember" aria-labelledby="last-ember-title">
+        <div className="last-ember-coals" aria-hidden="true">
+          <i /><i /><i /><i /><i />
+        </div>
+        <div className="last-ember-copy">
+          <p>ÚLTIMA BRASA DE LA NOCHE</p>
+          <h2 id="last-ember-title">
+            EL ANTOJO<br />
+            <em>YA GANÓ.</em>
+          </h2>
+          <span>
+            Si llegaste hasta aquí, ya sabes dónde encontrar una charola al carbón.
+          </span>
+          <a href="#menu">VOLVER A ENCENDER EL MENÚ ↑</a>
+        </div>
+      </section>
       <footer>
         <div className="mini-logo">
           <span>ESQUITES</span>
@@ -1391,6 +1407,7 @@ export default function MenuExperience() {
             >
               ×
             </button>
+            <div className="order-paper-content">
             {modal === "customize" && activeProduct && (
               <Customizer
                 activeProduct={activeProduct}
@@ -1496,6 +1513,7 @@ export default function MenuExperience() {
                 </button>
               </div>
             )}
+            </div>
           </section>
         </div>
       )}
