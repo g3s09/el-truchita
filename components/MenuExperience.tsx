@@ -60,7 +60,7 @@ type CustomerDetails = {
   address: string;
   references: string;
   exactLocation: string;
-  payment: "exact" | "change";
+  payment: "exact" | "change" | "transfer";
   changeFor: string;
 };
 type BusinessStatus = { open: boolean; label: string; isSaturday: boolean };
@@ -929,8 +929,10 @@ export default function MenuExperience() {
       .join("\n\n");
     const payment =
       customer.payment === "change"
-        ? "Sí, llevar cambio para " + money(Number(customer.changeFor))
-        : "No, pago exacto";
+        ? "Efectivo con cambio para " + money(Number(customer.changeFor))
+        : customer.payment === "transfer"
+          ? "Transferencia: solicitar los datos de pago por WhatsApp y enviar comprobante para confirmar."
+          : "Efectivo exacto";
     const delivery = deliveryPolicy(total);
     const orderTiming = isOpen
       ? "Pedido enviado durante horario de atención."
@@ -956,7 +958,7 @@ export default function MenuExperience() {
       customer.references +
       "\nUbicación exacta: " +
       (customer.exactLocation || "No compartida") +
-      "\nCambio: " +
+      "\nForma de pago: " +
       payment +
       "\n\n*Importante:* El pedido se trabajará hasta ser confirmado por El Truchita. Gracias por tu preferencia.";
     return (
@@ -1376,6 +1378,9 @@ export default function MenuExperience() {
             aria-label="Mi pedido"
             onMouseDown={(event) => event.stopPropagation()}
           >
+            <span className="burnt-paper-corners" aria-hidden="true">
+              <i /><i /><i /><i />
+            </span>
             <button
               className="close-modal"
               type="button"
@@ -2403,7 +2408,7 @@ function CheckoutForm({
           {locationStatus && <p role="status">{locationStatus}</p>}
         </div>
         <fieldset className="form-wide payment-choice">
-          <legend>¿PAGARÁS CON CAMBIO?</legend>
+          <legend>¿CÓMO PAGARÁS?</legend>
           <div>
             <label className={customer.payment === "exact" ? "selected" : ""}>
               <input
@@ -2431,6 +2436,24 @@ function CheckoutForm({
                 <small>Indícanos con cuánto pagarás.</small>
               </span>
             </label>
+            <label className={customer.payment === "transfer" ? "selected" : ""}>
+              <input
+                type="radio"
+                name="payment"
+                checked={customer.payment === "transfer"}
+                onChange={() =>
+                  setCustomer({
+                    ...customer,
+                    payment: "transfer",
+                    changeFor: "",
+                  })
+                }
+              />
+              <span>
+                <b>TRANSFERENCIA</b>
+                <small>Pide los datos y comparte tu comprobante por WhatsApp.</small>
+              </span>
+            </label>
           </div>
           {customer.payment === "change" && (
             <label className="change-field">
@@ -2448,6 +2471,12 @@ function CheckoutForm({
               />
               <b>MXN</b>
             </label>
+          )}
+          {customer.payment === "transfer" && (
+            <p className="transfer-help" role="status">
+              Al enviar tu pedido, pídenos los datos de transferencia por WhatsApp.
+              La orden se confirma cuando el negocio valide el pago.
+            </p>
           )}
         </fieldset>
       </div>

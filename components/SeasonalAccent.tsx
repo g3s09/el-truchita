@@ -108,6 +108,9 @@ export default function SeasonalAccent() {
           loading="lazy"
         />
       )}
+      <span className="seasonal-edition-label">
+        {season.name.toUpperCase()} · EDICIÓN AL CARBÓN
+      </span>
       {phrase ? <span className="seasonal-phrase">{phrase}</span> : null}
     </div>
   );
