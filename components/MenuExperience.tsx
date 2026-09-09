@@ -553,7 +553,7 @@ export default function MenuExperience() {
     if (!noticeQueue.length) return;
     noticeTimer.current = window.setTimeout(
       () => setNoticeQueue((queue) => queue.slice(1)),
-      3900,
+      2400,
     );
     return () => window.clearTimeout(noticeTimer.current);
   }, [noticeQueue]);
@@ -672,7 +672,7 @@ export default function MenuExperience() {
       message: nextMaicitoMessage(key, messages),
       action,
     };
-    setNoticeQueue((queue) => [...queue, notice]);
+    setNoticeQueue([notice]);
     return notice.message;
   };
 
@@ -1349,7 +1349,10 @@ export default function MenuExperience() {
           <i /><i /><i /><i />
         </span>
       )}
-      {noticeQueue[0] && (
+      {noticeQueue[0] &&
+        modal !== "customize" &&
+        modal !== "checkout" &&
+        modal !== "sending" && (
         <TruchitaNotice
           notice={noticeQueue[0]}
           onClose={() => setNoticeQueue((queue) => queue.slice(1))}
@@ -1357,7 +1360,11 @@ export default function MenuExperience() {
       )}
       {modal !== "none" && (
         <div
-          className="modal-backdrop"
+          className={
+            modal === "customize"
+              ? "modal-backdrop customizer-backdrop"
+              : "modal-backdrop"
+          }
           onMouseDown={() =>
             modal === "sending" ? dismissSending() : setModal("none")
           }
@@ -1500,9 +1507,8 @@ function TruchitaNotice({
 }) {
   return (
     <aside className="truchita-notice" role="status" aria-live="polite">
-      <img src="/maicito-truchita-free.png" alt="" aria-hidden="true" />
+      <i className="notice-ember" aria-hidden="true">✦</i>
       <div>
-        <p>EL TRUCHITA DICE</p>
         <strong>{notice.message}</strong>
         {notice.action && (
           <button
@@ -1707,10 +1713,14 @@ function Customizer({
     Number(queso) +
     chosenSpiceCount +
     selectedExtraIds.length;
+  const hasSpice = isCorn
+    ? selectedCornSpices.length > 0
+    : spice.id !== "sin-picante";
   const previewClass =
     "tray-preview" +
     (mayo ? " has-mayo" : "") +
     (queso ? " has-queso" : "") +
+    (hasSpice ? " has-spice" : "") +
     (selectedExtraIds.length ? " has-extras" : "");
   const previewImage =
     activeProduct.service === "bag"
@@ -1750,12 +1760,19 @@ function Customizer({
           <span className="preview-charcoal">AL CARBÓN</span>
           {mayo && <b className="preview-chip chip-mayo">MAYO</b>}
           {queso && <b className="preview-chip chip-queso">QUESO</b>}
+          {hasSpice && <b className="preview-chip chip-spice">PICANTE</b>}
           {selectedExtraIds.length > 0 && (
             <b className="preview-chip chip-extra">
               +{selectedExtraIds.length} EXTRA
               {selectedExtraIds.length > 1 ? "S" : ""}
             </b>
           )}
+          <span className="tray-ingredient-layer" aria-hidden="true">
+            {mayo && <i className="tray-mayo" />}
+            {queso && <i className="tray-queso" />}
+            {hasSpice && <i className="tray-spice" />}
+            {selectedExtraIds.length > 0 && <i className="tray-extras" />}
+          </span>
         </figure>
         <div className="arcade-score">
           <span>ANTOJO SCORE</span>
