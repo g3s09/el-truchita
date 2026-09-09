@@ -45,6 +45,7 @@ type Modal =
   | "none"
   | "customize"
   | "cart"
+  | "repeat"
   | "confirm-empty"
   | "checkout"
   | "sending";
@@ -68,6 +69,7 @@ type DeliveryPolicy = { title: string; detail: string; whatsapp: string };
 
 const WHATSAPP_BUSINESS_NUMBER = "522204419169";
 const CART_STORAGE_KEY = "el-truchita-cart-v1";
+const LAST_ORDER_STORAGE_KEY = "el-truchita-last-order-v1";
 const SOUND_STORAGE_KEY = "el-truchita-sound-preference";
 const money = (amount: number) => "$" + amount;
 const snackFlavors: SnackFlavor[] = [
@@ -401,6 +403,7 @@ export default function MenuExperience() {
   const [activePanel, setActivePanel] = useState(0);
   const [visitedPanels, setVisitedPanels] = useState<number[]>([0]);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [lastOrder, setLastOrder] = useState<CartItem[]>([]);
   const [cartLoaded, setCartLoaded] = useState(false);
   const [mayo, setMayo] = useState(true);
   const [queso, setQueso] = useState(true);
@@ -462,8 +465,13 @@ export default function MenuExperience() {
     try {
       const saved = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) ?? "[]");
       if (Array.isArray(saved)) setCart(saved as CartItem[]);
+      const previousOrder = JSON.parse(
+        localStorage.getItem(LAST_ORDER_STORAGE_KEY) ?? "[]",
+      );
+      if (Array.isArray(previousOrder)) setLastOrder(previousOrder as CartItem[]);
     } catch {
       localStorage.removeItem(CART_STORAGE_KEY);
+      localStorage.removeItem(LAST_ORDER_STORAGE_KEY);
     } finally {
       setCartLoaded(true);
     }
@@ -979,8 +987,15 @@ export default function MenuExperience() {
     setModal("sending");
     window.clearTimeout(checkoutTimer.current);
     checkoutTimer.current = window.setTimeout(() => {
+      const destination = whatsappUrl();
+      localStorage.setItem(LAST_ORDER_STORAGE_KEY, JSON.stringify(cart));
+      localStorage.removeItem(CART_STORAGE_KEY);
+      setLastOrder(cart);
+      setCart([]);
+      setReference("");
+      setAddedCartMessage("");
       setModal("none");
-      window.location.assign(whatsappUrl());
+      window.requestAnimationFrame(() => window.location.assign(destination));
     }, 1150);
   };
 
@@ -996,12 +1011,65 @@ export default function MenuExperience() {
 
   const openCart = () => {
     playSound("open");
+    if (!cart.length && lastOrder.length) {
+      setModal("repeat");
+      return;
+    }
     if (!cart.length)
       setEmptyCartMessage(
         nextMaicitoMessage("truchita-empty-cart-phrase", emptyCartMessages),
       );
     setAddedCartMessage("");
     setModal("cart");
+  };
+
+  const restoreLastOrder = () => {
+    const restored = lastOrder.flatMap((item, index) => {
+      const currentProduct = menu.products.find(
+        (product) => product.id === item.product.id,
+      );
+      const currentFilling = item.bagFilling
+        ? menu.products.find((product) => product.id === item.bagFilling?.id)
+        : undefined;
+      if (
+        !currentProduct ||
+        currentProduct.available === false ||
+        (item.bagFilling &&
+          (!currentFilling || currentFilling.available === false))
+      )
+        return [];
+      return [
+        {
+          ...item,
+          id: currentProduct.id + "-repeat-" + Date.now() + "-" + index,
+          product: currentProduct,
+          bagFilling: currentFilling ?? item.bagFilling,
+        },
+      ];
+    });
+    if (!restored.length) {
+      setModal("none");
+      notify("truchita-repeat-unavailable", [
+        "Tu antojo clásico se nos escapó del menú. Hoy toca descubrir una nueva joya.",
+      ]);
+      return;
+    }
+    playSound("add");
+    triggerMaicito("celebrate");
+    setCart(restored);
+    setAddedCartMessage(
+      "Revivió tu orden favorita. El carbón ya sabía que no te ibas a ir tan fácil.",
+    );
+    setModal("cart");
+  };
+
+  const startNewOrder = () => {
+    setCart([]);
+    setLastOrder([]);
+    localStorage.removeItem(CART_STORAGE_KEY);
+    localStorage.removeItem(LAST_ORDER_STORAGE_KEY);
+    setModal("none");
+    document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
   };
 
   const removeCartItem = (id: string) => {
@@ -1459,6 +1527,13 @@ export default function MenuExperience() {
                   setReference((current) => current || orderReference());
                   setModal("checkout");
                 }}
+              />
+            )}
+            {modal === "repeat" && (
+              <RepeatOrderView
+                items={lastOrder}
+                onRepeat={restoreLastOrder}
+                onStartNew={startNewOrder}
               />
             )}
             {modal === "confirm-empty" && (
@@ -2270,6 +2345,52 @@ function CartView({
           </button>
         </>
       )}
+    </>
+  );
+}
+
+function RepeatOrderView({
+  items,
+  onRepeat,
+  onStartNew,
+}: {
+  items: CartItem[];
+  onRepeat: () => void;
+  onStartNew: () => void;
+}) {
+  const total = items.reduce((sum, item) => sum + cartItemTotal(item), 0);
+  return (
+    <>
+      <p className="modal-kicker">EL CARBÓN TE RECONOCIÓ</p>
+      <h2>¿LO DE SIEMPRE?</h2>
+      <aside className="repeat-order-joke">
+        <p>
+          Esa charola ya conoce tu casa mejor que el repartidor de paquetería;
+          sólo le faltan las llaves.
+        </p>
+      </aside>
+      <div className="repeat-order-list">
+        {items.map((item) => (
+          <article key={item.id}>
+            <span>{item.product.name}</span>
+            <b>{money(cartItemTotal(item))}</b>
+          </article>
+        ))}
+      </div>
+      <div className="repeat-order-total">
+        <span>ÚLTIMO SUBTOTAL</span>
+        <strong>{money(total)}</strong>
+      </div>
+      <p className="repeat-order-note">
+        Volvemos a cargar los mismos toques; el monto se actualiza si el menú
+        cambió.
+      </p>
+      <button className="wide-action" type="button" onClick={onRepeat}>
+        SÍ, REPITE ESA JOYA <span>↻</span>
+      </button>
+      <button className="back-button repeat-new" type="button" onClick={onStartNew}>
+        NO, HOY VENGO A IMPROVISAR
+      </button>
     </>
   );
 }
