@@ -86,6 +86,7 @@ export default function Home() {
         <div className="vintage-burn burn-two" aria-hidden="true" />
         <div className="smoke smoke-one" aria-hidden="true" />
         <div className="smoke smoke-two" aria-hidden="true" />
+        <div className="smoke smoke-three" aria-hidden="true" />
         <div className="ember-field" aria-hidden="true">
           {[
             ["7%", "21%", "0s"],
@@ -145,6 +146,9 @@ export default function Home() {
             className="home-share-link"
             label="COMPARTIR ENLACE DE PÁGINA"
           />
+        </div>
+        <div className="hero-front-smoke" aria-hidden="true">
+          <i /><i />
         </div>
         <aside className="future-space" id="domicilio">
           <p>PRÓXIMAMENTE</p>

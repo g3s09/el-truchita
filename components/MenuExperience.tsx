@@ -439,6 +439,7 @@ export default function MenuExperience() {
   const maicitoTimer = useRef<number | undefined>(undefined);
   const noticeTimer = useRef<number | undefined>(undefined);
   const cartFlightTimer = useRef<number | undefined>(undefined);
+  const checkoutTimer = useRef<number | undefined>(undefined);
   const addLock = useRef(false);
   const audioContext = useRef<AudioContext | null>(null);
 
@@ -559,9 +560,27 @@ export default function MenuExperience() {
     () => () => {
       window.clearTimeout(noticeTimer.current);
       window.clearTimeout(cartFlightTimer.current);
+      window.clearTimeout(checkoutTimer.current);
     },
     [],
   );
+
+  useEffect(() => {
+    const resetSendingState = () => {
+      if (document.visibilityState === "hidden") return;
+      window.clearTimeout(checkoutTimer.current);
+      setModal((current) => (current === "sending" ? "none" : current));
+    };
+
+    window.addEventListener("pageshow", resetSendingState);
+    window.addEventListener("popstate", resetSendingState);
+    document.addEventListener("visibilitychange", resetSendingState);
+    return () => {
+      window.removeEventListener("pageshow", resetSendingState);
+      window.removeEventListener("popstate", resetSendingState);
+      document.removeEventListener("visibilitychange", resetSendingState);
+    };
+  }, []);
 
   const availableProducts = useMemo(
     () => menu.products.filter((product) => product.available !== false),
@@ -953,7 +972,16 @@ export default function MenuExperience() {
       nextMaicitoMessage("truchita-sending-phrase", sendingMessages),
     );
     setModal("sending");
-    window.setTimeout(() => window.location.assign(whatsappUrl()), 1150);
+    window.clearTimeout(checkoutTimer.current);
+    checkoutTimer.current = window.setTimeout(() => {
+      setModal("none");
+      window.location.assign(whatsappUrl());
+    }, 1150);
+  };
+
+  const dismissSending = () => {
+    window.clearTimeout(checkoutTimer.current);
+    setModal("none");
   };
 
   const closeCartToMenu = () => {
@@ -1005,6 +1033,7 @@ export default function MenuExperience() {
   return (
     <main className="menu-page">
       <SeasonalAccent />
+      <CharcoalCursorTrail />
       <header className="site-header menu-header">
         <a className="mini-logo" href="/" aria-label="Volver al inicio">
           <span>ESQUITES</span>
@@ -1064,6 +1093,9 @@ export default function MenuExperience() {
         id="menu"
         aria-labelledby="menu-title"
       >
+        <div className="menu-coal-atmosphere" aria-hidden="true">
+          <i /><i /><i />
+        </div>
         <div className="menu-lead">
           <p className="section-kicker light">ARMA TU ANTOJO, A TU GUSTO</p>
           <h1 id="menu-title">
@@ -1185,12 +1217,17 @@ export default function MenuExperience() {
           ref={panelRail}
           onScroll={syncActivePanel}
         >
-          {panelDetails.map((panel) => (
+          {panelDetails.map((panel, index) => (
             <section
-              className="menu-panel"
+              className={
+                "menu-panel" + (activePanel === index ? " active" : "")
+              }
               key={panel.key}
               aria-label={panel.title}
             >
+              <span className="panel-ash-trail" aria-hidden="true">
+                <i /><i /><i /><i />
+              </span>
               {panel.key === "bolsa" ? (
                 <BagSection
                   product={productsBySection.bolsa[0]}
@@ -1222,6 +1259,9 @@ export default function MenuExperience() {
             VER MI PEDIDO{" "}
             <i className={cart.length ? "cart-dot active" : "cart-dot"} />
           </button>
+        </div>
+        <div className="low-fire-line" aria-hidden="true">
+          <i /><i /><i /><i /><i /><i />
         </div>
       </section>
 
@@ -1294,6 +1334,11 @@ export default function MenuExperience() {
           <i>✦</i><i>✦</i>
         </span>
       )}
+      {cartPulse && (
+        <span className="cart-coal-flare" aria-hidden="true">
+          <i /><i /><i /><i />
+        </span>
+      )}
       {noticeQueue[0] && (
         <TruchitaNotice
           notice={noticeQueue[0]}
@@ -1303,7 +1348,9 @@ export default function MenuExperience() {
       {modal !== "none" && (
         <div
           className="modal-backdrop"
-          onMouseDown={() => modal !== "sending" && setModal("none")}
+          onMouseDown={() =>
+            modal === "sending" ? dismissSending() : setModal("none")
+          }
         >
           <section
             className={"order-modal " + modal}
@@ -1312,16 +1359,16 @@ export default function MenuExperience() {
             aria-label="Mi pedido"
             onMouseDown={(event) => event.stopPropagation()}
           >
-            {modal !== "sending" && (
-              <button
-                className="close-modal"
-                type="button"
-                onClick={() => setModal("none")}
-                aria-label="Cerrar"
-              >
-                ×
-              </button>
-            )}
+            <button
+              className="close-modal"
+              type="button"
+              onClick={() =>
+                modal === "sending" ? dismissSending() : setModal("none")
+              }
+              aria-label={modal === "sending" ? "Cancelar envío" : "Cerrar"}
+            >
+              ×
+            </button>
             {modal === "customize" && activeProduct && (
               <Customizer
                 activeProduct={activeProduct}
@@ -1411,6 +1458,18 @@ export default function MenuExperience() {
                   <br />A WHATSAPP!
                 </h2>
                 <p>{sendingMessage}</p>
+                <aside className="charcoal-ticket" aria-label="Resumen del envío">
+                  <span>RECIBO DE BRASA</span>
+                  <strong>{reference || "EL TRUCHITA"}</strong>
+                  <b>{money(total)} · PENDIENTE DE CONFIRMACIÓN</b>
+                </aside>
+                <button
+                  className="sending-cancel"
+                  type="button"
+                  onClick={dismissSending}
+                >
+                  CANCELAR Y VOLVER AL MENÚ
+                </button>
               </div>
             )}
           </section>
@@ -1485,6 +1544,53 @@ function ClearCartConfirm({
         </button>
       </div>
     </div>
+  );
+}
+
+function CharcoalCursorTrail() {
+  const trail = useRef<HTMLSpanElement>(null);
+  const frame = useRef<number | undefined>(undefined);
+  const position = useRef({ x: -120, y: -120 });
+
+  useEffect(() => {
+    const supportsFinePointer = window.matchMedia(
+      "(hover: hover) and (pointer: fine)",
+    );
+    if (!supportsFinePointer.matches) return;
+
+    const moveTrail = (event: PointerEvent) => {
+      position.current = { x: event.clientX, y: event.clientY };
+      if (frame.current) return;
+      frame.current = window.requestAnimationFrame(() => {
+        if (trail.current) {
+          trail.current.style.transform =
+            "translate3d(" +
+            position.current.x +
+            "px, " +
+            position.current.y +
+            "px, 0)";
+          trail.current.dataset.active = "true";
+        }
+        frame.current = undefined;
+      });
+    };
+    const hideTrail = () => {
+      if (trail.current) trail.current.dataset.active = "false";
+    };
+
+    window.addEventListener("pointermove", moveTrail, { passive: true });
+    document.addEventListener("mouseleave", hideTrail);
+    return () => {
+      window.removeEventListener("pointermove", moveTrail);
+      document.removeEventListener("mouseleave", hideTrail);
+      window.cancelAnimationFrame(frame.current ?? 0);
+    };
+  }, []);
+
+  return (
+    <span className="charcoal-cursor-trail" ref={trail} aria-hidden="true">
+      <i /><i /><i />
+    </span>
   );
 }
 
@@ -1565,6 +1671,9 @@ function Customizer({
       : "/esquites-charola-carbon.png";
   return (
     <>
+      <span className="customizer-burn-reveal" aria-hidden="true">
+        <i /><i /><i />
+      </span>
       <p className="modal-kicker">
         {carbonOnly
           ? "100% AL CARBÓN · MUY MEXICANO"
@@ -2369,6 +2478,9 @@ function MenuSection({
               }
               key={product.id}
             >
+              <span className="card-ember-burst" aria-hidden="true">
+                <i /><i /><i /><i />
+              </span>
               <div className="product-number">
                 {String(index + 1).padStart(2, "0")}
               </div>
